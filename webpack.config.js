@@ -11,7 +11,10 @@ module.exports = {
       filename: 'style.css',
     })
   ],
-  entry: './src/index.ts',
+  entry: {
+    bundle: './src/index.ts',
+    worker: './src/worker.ts'
+  },
   mode: "development",
   devtool: 'inline-source-map',
   module: {
@@ -58,7 +61,7 @@ module.exports = {
     extensions: [ '.tsx', '.ts', '.js' ]
   },
   output: {
-    filename: 'bundle.js',
+    filename: '[name].js',
     path: path.resolve(__dirname, 'dist')
   }
 };

@@ -1,31 +1,38 @@
 {
   "name": "@ximera/dapp",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "Decentralized content viewer for Ximera",
   "main": "index.js",
   "scripts": {
+    "webpack": "webpack",
+    "start": "http-server",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Jim Fowler",
   "license": "GPL-3.0-or-later",
   "devDependencies": {
-    "autoprefixer": "^9.4.9",
-    "css-loader": "^2.1.0",
+    "@types/events": "^3.0.0",
+    "@types/node": "^11.13.20",
+    "autoprefixer": "^9.6.1",
+    "css-loader": "^2.1.1",
     "html-webpack-plugin": "^3.2.0",
     "mini-css-extract-plugin": "^0.5.0",
-    "node-sass": "^4.11.0",
+    "node-sass": "^4.12.0",
     "postcss-loader": "^3.0.0",
-    "sass-loader": "^7.1.0",
+    "sass-loader": "^7.3.1",
     "style-loader": "^0.23.1",
-    "ts-loader": "^5.3.3",
-    "tslint": "^5.13.0",
-    "typescript": "^3.3.3333",
-    "webpack": "^4.29.6",
-    "webpack-cli": "^3.2.3"
+    "ts-loader": "^5.4.5",
+    "tslint": "^5.19.0",
+    "typescript": "^3.6.2",
+    "webpack": "^4.39.3",
+    "webpack-cli": "^3.3.7"
   },
   "dependencies": {
+    "@isomorphic-git/lightning-fs": "^3.3.0",
     "bootstrap": "^4.3.1",
-    "jquery": "^3.3.1",
-    "popper.js": "^1.14.7"
+    "isomorphic-git": "^0.64.6",
+    "jquery": "^3.4.1",
+    "pify": "^4.0.1",
+    "popper.js": "^1.15.0"
   }
 }
