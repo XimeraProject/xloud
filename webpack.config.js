@@ -13,7 +13,8 @@ module.exports = {
   ],
   entry: {
     bundle: './src/index.ts',
-    worker: './src/worker.ts'
+    worker: './src/worker.ts',
+    tex: './src/tex.ts',
   },
   mode: "development",
   devtool: 'inline-source-map',
@@ -62,6 +63,7 @@ module.exports = {
   },
   output: {
     filename: '[name].js',
+    publicPath: '/',
     path: path.resolve(__dirname, 'dist')
   }
 };

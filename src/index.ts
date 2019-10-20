@@ -4,11 +4,15 @@ import './scss/app.scss';
 import * as pify from 'pify';
 import { version } from '../package.json';
 
-const repositoryName = 'mooculus/calculus';
+var ps = window.location.pathname.split('/');
+let repositoryName = ps.slice(1,3).join('/');
+var pathName = ps.slice(3).join('/');
+console.log("pathname=",pathName);
 
 import * as git from 'isomorphic-git';
 import FS from '@isomorphic-git/lightning-fs';
 
+console.log("repository=",repositoryName);
 const fs = new FS(repositoryName);
 git.plugins.set('fs', fs);
 
@@ -22,11 +26,14 @@ console.log("    ▄██▀██▄   ██▐██  ▐██ ██▌  �
 console.log("  ▄██▀   ▀██▄ ██▐██   ▀███▀   ██▌▀█████████▐█▌    ▀██▄██▀     ▀██");
 console.log("version",version);
 
-let directoryName = '/repository';
+import { findMatch } from './kpathsea';
+window.findMatch = findMatch;
+
+let directoryName = '/repository2';
 
 function cloneFromGithub( repositoryName : string, directoryName : string, progress : any = undefined ) {
     return new Promise(function(resolve, reject) {
-	let worker = new Worker('worker.js');
+	let worker = new Worker('/worker.js');
 
 	worker.addEventListener('message', function(e) {
 	    if (e.data.message == 'progress') {
@@ -50,27 +57,43 @@ function cloneFromGithub( repositoryName : string, directoryName : string, progr
 
 
 async function main() {
-    try {
-	if (await pfs.stat( directoryName )) {
-	    console.log( "Already exists" );
-	} else {
-	    console.log("Could not access it.");
-	    await cloneFromGithub( repositoryName, directoryName );
-	}
-    } catch (err) {
-	console.log("Directory likely does not exist.");
-
-	try {
-	    await cloneFromGithub( repositoryName, directoryName );
-	} catch (err) {
-	    console.log("Could not clone: ",err);
-	}
+  try {
+    if (await pfs.stat( directoryName )) {
+      console.log( "Already exists" );
+    } else {
+      console.log("Could not access it.");
+      await cloneFromGithub( repositoryName, directoryName );
     }
+  } catch (err) {
+    console.log("Directory likely does not exist.");
+    
+    try {
+      await cloneFromGithub( repositoryName, directoryName );
+    } catch (err) {
+      console.log("Could not clone: ",err);
+    }
+  }
+  
+  // Now it should not be empty...
+  let dump = await pfs.readdir(directoryName);
+  console.log( dump );
+  
+  try {
+    let content = await pfs.readFile(directoryName + '/' + pathName + '.tex');
+    console.log("filename:",directoryName + '/' + pathName + '.tex');
+    let s = new TextDecoder("utf-8").decode(content);
+    document.getElementById('content').innerHTML = s;
 
-    // Now it should not be empty...
-    let dump = await pfs.readdir(directoryName);
-
-    console.log( dump );
+    let tex = new Worker('/tex.js'); 
+    tex.postMessage( { repositoryName: repositoryName,
+		       directoryName: directoryName,
+		       pathName: pathName } );
+    
+  } catch (err) {
+    console.log("Could not find file: ",err);
+  }
+  
+  
 }
 
 main()

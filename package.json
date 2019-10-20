@@ -32,6 +32,9 @@
     "bootstrap": "^4.3.1",
     "isomorphic-git": "^0.64.6",
     "jquery": "^3.4.1",
+    "node-fetch": "^2.6.0",
+    "object-sizeof": "^1.5.2",
+    "pako": "^1.0.10",
     "pify": "^4.0.1",
     "popper.js": "^1.15.0"
   }
