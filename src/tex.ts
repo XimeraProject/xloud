@@ -53,7 +53,15 @@ self.onmessage = async function (e : any) {
   library.setFS( fs );
   library.setMemory( memory.buffer );
   let filename = directoryName + '/' + pathName + '.tex';
-  library.setInput( " " + filename + " \n\\end\n" );
+  //library.setInput( " " + filename + " \n\\end\n" );
+  library.setInput( " \\PassOptionsToPackage{margin=1in,paperwidth=" + (e.data.paperwidth + 144).toString() + "pt,paperheight=100in}{geometry}\n\\input{" + filename + " }\n\\end\n" );
+  
+  library.setCallback( function() {
+    let filename = directoryName + '/' + pathName + '.dvi';
+    //let data = library.readFileSync( filename )
+    let data = library.readFileSync( 'texput.dvi' );
+    self.postMessage({dvi: data}, [data.buffer]);
+  });
   
   const compiled = new WebAssembly.Module(code);
   const instance;
@@ -65,6 +73,7 @@ self.onmessage = async function (e : any) {
   } catch (err) {
       console.log(err);
   }
+  
   console.log("instance=",instance);
     
   const wasmExports = instance.exports;

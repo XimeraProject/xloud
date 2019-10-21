@@ -54,7 +54,7 @@ function openSync( filename, mode )
 			 buffer: new Uint8Array(buffer),
 			 descriptor: files.length
 		       });
-	    console.log('called back from web, starting to rewind the stack');
+	    //console.log('called back from web, starting to rewind the stack');
 	    startRewind();
 	  });
 	});
@@ -79,7 +79,7 @@ function openSync( filename, mode )
 		       });
 	  }
 	  
-	  console.log('called back from lightning, starting to rewind the stack');
+	  //console.log('called back from lightning, starting to rewind the stack');
 	  startRewind();
 	});
       }
@@ -181,26 +181,35 @@ export function setFS(f) {
   fs = f;
 }
 
-export function setInput(input, cb) {
+export function setCallback(cb) {
+  callback = cb;
+}
+
+export function setInput(input) {
   inputBuffer = input;
-  if (cb) callback = cb;
 }
 
 var DATA_ADDR = 900 * 1024*64;
 var END_ADDR = 1000 * 1024*64;
+var windingDepth = 0;
 
 function startUnwind() {
   view[DATA_ADDR >> 2] = DATA_ADDR + 8;
   view[DATA_ADDR + 4 >> 2] = END_ADDR;
   wasmExports.asyncify_start_unwind(DATA_ADDR);
+  windingDepth = windingDepth + 1;
 }
 
 function startRewind() {
   wasmExports.asyncify_start_rewind(DATA_ADDR);
   wasmExports.main();
+  if (windingDepth == 0) {
+    callback();
+  }
 }
 
 function stopRewind() {
+  windingDepth = windingDepth - 1;  
   wasmExports.asyncify_stop_rewind();
 }
 
@@ -376,7 +385,6 @@ export function get(descriptor, pointer, length) {
 	buffer[pointer] = 13;
         file.eof = true;
         file.eoln = true;
-        if (callback) callback();
       } else
 	buffer[pointer] = inputBuffer[file.position].charCodeAt(0);
     } else {

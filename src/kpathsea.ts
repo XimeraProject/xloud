@@ -1,4 +1,5 @@
 import * as path from 'path';
+import * as idb from 'idb';
 
 async function* makeTextFileLineIterator(fileURL) {
   const utf8Decoder = new TextDecoder('utf-8');
@@ -59,9 +60,31 @@ async function* makeFilenameIterator(root) {
   return;
 }
 
-async function makeDatabase(root) {
-  var database = {};
+async function openDatabase() {
+  let shouldPopulate = false;
+  
+  let db = await idb.openDB('kpathsea', 11, { async upgrade(db, oldVersion, newVersion, tx) {
+    console.log("Upgrading");
+    shouldPopulate = true;
+    
+    if (!db.objectStoreNames.contains('filenames')) {
+      let store = db.createObjectStore('filenames', {keyPath: 'filename'});
+      store.createIndex('basename', 'basename', {unique: false});
+      store.createIndex('filename', 'filename', {unique: true});
+    }
+  }});
 
+  if (shouldPopulate) {
+    console.log("Popualting1");
+    await populateDatabase('/texmf/');
+  }
+
+  return db;
+}
+
+async function populateDatabase(root) {
+  let list = [];
+  
   for await (let filename of makeFilenameIterator(root)) {
     // In Kpathsea version 6.3.0 (released with TeX Live 2018), a new
     // fallback search was implemented on Unix-like systems, including
@@ -70,34 +93,43 @@ async function makeDatabase(root) {
     // filesystem, a second check is made for a case-insensitive
     // match.
     let f = path.basename(filename).toLowerCase();
-    
-    if (f in database) {
-      database[f].push( filename );
-    } else {
-      database[f] = [ filename ];
-    }
+    list.push( { basename: f, filename: filename } );
+  }
+
+  let db = await openDatabase();
+  let tx = db.transaction('filenames', 'readwrite');
+
+  for( let obj of list ) {
+    tx.store.add(obj);
   }
   
-  return database;
+  await tx.done;
 }
 
-var db = undefined;
+export async function findMatches( partialPath ) {
+  let db = await openDatabase();
 
-export async function findMatch( partialPath ) {
-  const root = '/texmf/';
+  let tx = db.transaction('filenames', 'readonly');
 
-  if (db == undefined)
-    db = await makeDatabase(root);
+  let matches = await tx.store.index('basename').getAllKeys(path.basename(partialPath).toLowerCase());
 
-  let matches = db[path.basename(partialPath).toLowerCase()];
-
-  if (matches)
-    return matches
+  db.close();
+  
+  const root = '/texmf';
+  
+  return matches
     .filter( fullPath => fullPath.toLowerCase().endsWith( partialPath.toLowerCase() ) )
     .map( fullPath => path.join(root,fullPath) )
     .sort(function(a, b){
       return a.length - b.length;
-    })[0];
+    });
+}
+
+export async function findMatch( partialPath ) {
+  let matches = await findMatches( partialPath );
+
+  if (matches.length > 0)
+    return matches[0];
   else
     return undefined;
 }

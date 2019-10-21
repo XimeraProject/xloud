@@ -1,6 +1,9 @@
 import 'bootstrap';
 import './scss/app.scss';
 
+import { dvi2html } from 'dvi2html';
+import { Writable } from 'stream';
+
 import * as pify from 'pify';
 import { version } from '../package.json';
 
@@ -55,6 +58,25 @@ function cloneFromGithub( repositoryName : string, directoryName : string, progr
     });
 }
 
+async function displayDvi(dvi) {
+  let html = "";  
+  const page = new Writable({
+    write(chunk, encoding, callback) {
+      html = html + chunk.toString();
+      callback();
+    }
+  });
+  
+  async function* streamBuffer() {
+    yield Buffer.from(dvi);
+    return;
+  }  
+  
+  let machine = await dvi2html( streamBuffer(), page );
+  var div = document.getElementById('page');
+  div.innerHTML = "";
+  div.innerHTML = html;
+}
 
 async function main() {
   try {
@@ -82,13 +104,17 @@ async function main() {
     let content = await pfs.readFile(directoryName + '/' + pathName + '.tex');
     console.log("filename:",directoryName + '/' + pathName + '.tex');
     let s = new TextDecoder("utf-8").decode(content);
-    document.getElementById('content').innerHTML = s;
-
+    //document.getElementById('content').innerHTML = s;
     let tex = new Worker('/tex.js'); 
-    tex.postMessage( { repositoryName: repositoryName,
+    tex.postMessage( { paperwidth: document.body.clientWidth * 3 / 4,
+		       repositoryName: repositoryName,
 		       directoryName: directoryName,
 		       pathName: pathName } );
     
+    tex.addEventListener('message', function (msg) {
+      displayDvi(msg.data.dvi);
+    });
+
   } catch (err) {
     console.log("Could not find file: ",err);
   }

@@ -1,1 +1,16 @@
 @import "~bootstrap/scss/bootstrap";
+@import "./fonts.scss";
+
+#page {
+    position: relative;
+    top: 0in;
+    left: 0in;
+}
+
+body {
+    margin: 0;
+}
+
+html {
+  overflow-y: scroll;
+}

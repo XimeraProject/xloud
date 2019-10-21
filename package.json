@@ -30,6 +30,9 @@
   "dependencies": {
     "@isomorphic-git/lightning-fs": "^3.3.0",
     "bootstrap": "^4.3.1",
+    "dvi2html": "0.0.2",
+    "fetch-readablestream": "^0.2.0",
+    "idb": "^4.0.5",
     "isomorphic-git": "^0.64.6",
     "jquery": "^3.4.1",
     "node-fetch": "^2.6.0",
