@@ -43,6 +43,9 @@ function openSync( filename, mode )
 
       if (filename == 'ximera.cls')
 	fullFilename = '/local-texmf/tex/latex/ximeraLatex/ximera.cls';
+
+      if (filename == 'pgfsys-ximera.def')
+	fullFilename = '/local-texmf/tex/latex/ximeraLatex/pgfsys-ximera.def';
       
       if (fullFilename) {
 	console.log("Found it in ", fullFilename);

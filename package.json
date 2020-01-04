@@ -12,8 +12,8 @@
   "license": "GPL-3.0-or-later",
   "devDependencies": {
     "@types/events": "^3.0.0",
-    "@types/node": "^11.13.20",
     "autoprefixer": "^9.6.1",
+    "bootstrap.native-loader": "^2.0.0",
     "css-loader": "^2.1.1",
     "html-webpack-plugin": "^3.2.0",
     "mini-css-extract-plugin": "^0.5.0",
@@ -25,11 +25,15 @@
     "tslint": "^5.19.0",
     "typescript": "^3.6.2",
     "webpack": "^4.39.3",
-    "webpack-cli": "^3.3.7"
+    "webpack-cli": "^3.3.7",
+    "@types/node": "^11.13.20"
   },
   "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "^1.2.25",
+    "@fortawesome/free-solid-svg-icons": "^5.11.2",
     "@isomorphic-git/lightning-fs": "^3.3.0",
     "bootstrap": "^4.3.1",
+    "bootstrap.native": "^2.0.27",
     "dvi2html": "0.0.2",
     "fetch-readablestream": "^0.2.0",
     "idb": "^4.0.5",

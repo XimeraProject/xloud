@@ -1,6 +1,11 @@
 import 'bootstrap';
 import './scss/app.scss';
 
+import { dom, library } from '@fortawesome/fontawesome-svg-core';
+import { fas } from '@fortawesome/free-solid-svg-icons';
+library.add(fas);
+dom.i2svg();
+
 import { dvi2html } from 'dvi2html';
 import { Writable } from 'stream';
 
@@ -21,13 +26,13 @@ git.plugins.set('fs', fs);
 
 const pfs = fs.promises;
 
-console.log("This is");
-console.log("  ▀██▄   ▄██▀ ██ █████     █████ ▄███████████████████▄    ███");
-console.log("    ▀██▄██▀   ██▐██ ▐██   ██▌ ██▌██                 ██▌  ██▀██");
-console.log("      ███     ██▐██  ██▌ ▐██  ██▌▐█████████ ▄████████▀  ██▀ ▀██");
-console.log("    ▄██▀██▄   ██▐██  ▐██ ██▌  ██▌██        ▐█▌  ▀██▄   ██▀   ▀██");
-console.log("  ▄██▀   ▀██▄ ██▐██   ▀███▀   ██▌▀█████████▐█▌    ▀██▄██▀     ▀██");
-console.log("version",version);
+console.log("This is\n" +
+"  ▀██▄   ▄██▀ ██ █████     █████ ▄███████████████████▄    ███\n" + 
+"    ▀██▄██▀   ██▐██ ▐██   ██▌ ██▌██                 ██▌  ██▀██\n" + 
+"      ███     ██▐██  ██▌ ▐██  ██▌▐█████████ ▄████████▀  ██▀ ▀██\n" + 
+"    ▄██▀██▄   ██▐██  ▐██ ██▌  ██▌██        ▐█▌  ▀██▄   ██▀   ▀██\n" + 
+"  ▄██▀   ▀██▄ ██▐██   ▀███▀   ██▌▀█████████▐█▌    ▀██▄██▀     ▀██\n" +
+"version",version);
 
 import { findMatch } from './kpathsea';
 window.findMatch = findMatch;
@@ -84,6 +89,7 @@ async function main() {
       console.log( "Already exists" );
     } else {
       console.log("Could not access it.");
+      
       await cloneFromGithub( repositoryName, directoryName );
     }
   } catch (err) {
@@ -101,8 +107,17 @@ async function main() {
   console.log( dump );
   
   try {
-    let content = await pfs.readFile(directoryName + '/' + pathName + '.tex');
-    console.log("filename:",directoryName + '/' + pathName + '.tex');
+    let texFilename = directoryName + '/' + pathName + '.tex';
+    try {
+      await pfs.stat( texFilename );
+      console.log("File exists, so we don't need to clone again.");
+    } catch (err) {
+      console.log("File does not exist, so we clone again.");
+      await cloneFromGithub( repositoryName, directoryName );
+    }
+      
+    let content = await pfs.readFile(texFilename);
+    console.log("filename:",texFilename);
     let s = new TextDecoder("utf-8").decode(content);
     //document.getElementById('content').innerHTML = s;
     let tex = new Worker('/tex.js'); 

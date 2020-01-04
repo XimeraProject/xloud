@@ -13,7 +13,7 @@ async function load() {
   let tex = await fetch('/tex/out2.wasm');
   code = await tex.arrayBuffer();
 
-  let response = await fetchStream('/tex/core11.dump.gz');
+  let response = await fetchStream('/tex/core12.dump.gz');
   const reader = response.body.getReader();
   const inf = new pako.Inflate();
   
@@ -54,7 +54,7 @@ self.onmessage = async function (e : any) {
   library.setMemory( memory.buffer );
   let filename = directoryName + '/' + pathName + '.tex';
   //library.setInput( " " + filename + " \n\\end\n" );
-  library.setInput( " \\PassOptionsToPackage{margin=1in,paperwidth=" + (e.data.paperwidth + 144).toString() + "pt,paperheight=100in}{geometry}\n\\input{" + filename + " }\n\\end\n" );
+  library.setInput( " \\PassOptionsToClass{web}{ximera}\\PassOptionsToPackage{margin=1in,paperwidth=" + (e.data.paperwidth + 144).toString() + "pt,paperheight=100in}{geometry}\n\\input{" + filename + " }\n\\end\n" );
   
   library.setCallback( function() {
     let filename = directoryName + '/' + pathName + '.dvi';
