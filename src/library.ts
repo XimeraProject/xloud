@@ -1,3 +1,5 @@
+import path from 'path';
+
 /****************************************************************/
 // fake files
 
@@ -16,6 +18,7 @@ interface File {
 let filesystem = {};
 let files : File[] = [];
 let urlRoot = '';
+let currentDirectory = '';
 
 import findMatch from './kpathsea';
 
@@ -45,7 +48,7 @@ export function readFileSync( filename )
 let sleeping = false;
 function openSync( filename, mode )
 {
-  console.log("attemptnig to open",filename);
+  console.log("attempting to open",filename);
 
   if (!sleeping) {
     startUnwind();
@@ -74,7 +77,7 @@ function openSync( filename, mode )
 	  });
 	});
       } else {
-	fetch( urlRoot + filename )
+	fetch( urlRoot + path.join( currentDirectory, filename ) )
           .then( function( response ) {
             if (response.ok) {
 	      response.arrayBuffer().then( function( buffer ) {
@@ -91,7 +94,7 @@ function openSync( filename, mode )
 	      
 	      files.push({ filename: filename,
 			   position: 0,
-			   erstat: 0,
+			   erstat: (mode == 'r') ? 1 : 0,
 			   buffer: new Uint8Array(),
 			   descriptor: files.length
 		         });
@@ -103,7 +106,7 @@ function openSync( filename, mode )
 	      
 	    files.push({ filename: filename,
 			 position: 0,
-			 erstat: 0,
+			 erstat: (mode == 'r') ? 1 : 0,
 			 buffer: new Uint8Array(),
 			 descriptor: files.length
 		       });
@@ -200,6 +203,10 @@ interface Asyncify {
 }
 
 let wasmExports : Asyncify;
+
+export function setDirectory(d) {
+  currentDirectory = d;
+}
 
 export function setMemory(m) {
   memory = m;

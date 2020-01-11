@@ -1,6 +1,7 @@
 import * as library from './library';
 import pako from 'pako';
 import fetchStream from 'fetch-readablestream';
+import path from 'path';
 
 import kpathsea from './kpathsea';
 
@@ -52,7 +53,9 @@ self.onmessage = async function (e : MessageEvent) {
   library.setMemory( memory.buffer );
   let filename = pathName + '.tex';
 
-  library.setInput( " \\PassOptionsToClass{web}{ximera}\\PassOptionsToPackage{margin=1in,paperwidth=" + (e.data.paperwidth + 144).toString() + "pt,paperheight=100in}{geometry}\n\\input{" + filename + " }\n\\end\n" );
+  library.setDirectory( path.dirname( filename ) );
+  
+  library.setInput( " \\PassOptionsToClass{web}{ximera}\\PassOptionsToPackage{margin=1in,paperwidth=" + (e.data.paperwidth + 144).toString() + "pt,paperheight=100in}{geometry}\n\\input{" + path.basename( filename ) + "}\n\\end\n" );
   
   library.setCallback( function() {
     let filename = pathName + '.dvi';

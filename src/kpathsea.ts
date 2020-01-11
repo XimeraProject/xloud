@@ -8,8 +8,6 @@ interface Kpathsea {
 
 let kpathsea : Kpathsea | undefined = undefined;
 
-console.log("WHAT IS=",Kpathsea);
-
 export default async function findMatch( partialPath : string ) : Promise<string|undefined> {
   if (kpathsea === undefined) {
     const response = await fetch('/ls-R.json.gz');
