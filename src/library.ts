@@ -1,14 +1,23 @@
-// import { tfmData } from 'dvi2html';
-
 /****************************************************************/
 // fake files
 
-//import filesystem from './filesystem.json';
-var filesystem = {};
-var files = [];
-var fs = undefined;
+interface File {
+  filename: string;
+  buffer?: Uint8Array;
+  position: number;
+  erstat: number;
+  descriptor?: number;
+  stdout?: boolean;
+  stdin?: boolean;
+  eof?: boolean;
+  eoln?: boolean;
+}
 
-import { findMatch } from './kpathsea';
+let filesystem = {};
+let files : File[] = [];
+let urlRoot = '';
+
+import findMatch from './kpathsea';
 
 export function deleteEverything() {
   files = [];
@@ -23,14 +32,17 @@ export function readFileSync( filename )
 {
   for( let f of files ) {
     if (f.filename == filename) {
-      return f.buffer.slice( 0, f.position );
+      if (f.buffer)
+        return f.buffer.slice( 0, f.position );
+      else
+        throw Error(`Missing buffer for filename ${f.filename}`);
     }
   }
 
   throw Error(`Could not find file ${filename}`);
 }
 
-var sleeping = false;
+let sleeping = false;
 function openSync( filename, mode )
 {
   console.log("attemptnig to open",filename);
@@ -62,29 +74,41 @@ function openSync( filename, mode )
 	  });
 	});
       } else {
-	fs.readFile(filename, function(err, data) {
-	  if (err) {
-	    console.log("File does not exist:", filename);
+	fetch( urlRoot + filename )
+          .then( function( response ) {
+            if (response.ok) {
+	      response.arrayBuffer().then( function( buffer ) {
+	        files.push({ filename: filename,
+			     position: 0,
+			     erstat: 0,
+			     buffer: new Uint8Array(buffer),
+			     descriptor: files.length
+		           });
+	        startRewind();              
+              } );
+            } else {
+	      console.log("File does not exist:", filename);
+	      
+	      files.push({ filename: filename,
+			   position: 0,
+			   erstat: 0,
+			   buffer: new Uint8Array(),
+			   descriptor: files.length
+		         });
+	      startRewind();                          
+            }
+          }, function(err) {
+	    console.log("Network failure fetching", filename);
 	    console.log("err:",err);
-	    
+	      
 	    files.push({ filename: filename,
 			 position: 0,
 			 erstat: 0,
 			 buffer: new Uint8Array(),
 			 descriptor: files.length
 		       });
-	  } else {
-	    files.push({ filename: filename,
-			 position: 0,
-			 erstat: 0,
-			 buffer: data,
-			 descriptor: files.length
-		       });
-	  }
-	  
-	  //console.log('called back from lightning, starting to rewind the stack');
-	  startRewind();
-	});
+	    startRewind();                                      
+          });
       }
     });
 				
@@ -113,11 +137,8 @@ function closeSync( fd ) {
   // ignore this.
 }
 
-function writeSync( file, buffer, pointer, length )
+function writeSync( file, buffer, pointer = 0, length = buffer.length - pointer )
 {
-  if (pointer === undefined) pointer = 0;
-  if (length === undefined) length = buffer.length - pointer;
-
   while (length > file.buffer.length - file.position) {
     let b = new Uint8Array( 1 + file.buffer.length * 2 );
     b.set( file.buffer );
@@ -144,19 +165,20 @@ function readSync( file, buffer, pointer, length, seek )
 /****************************************************************/
 // fake process.write.stdout
 
-var consoleBuffer = "";
+let consoleBuffer = "";
+
 function writeToConsole(x) {
   consoleBuffer = consoleBuffer + x;
   if (consoleBuffer.indexOf("\n") >= 0) {
     let lines = consoleBuffer.split("\n");
-    consoleBuffer = lines.pop();
+    consoleBuffer = lines.pop() || "";
     for( let line of lines ) {
       console.log(line);
     }
   }
 }
 
-var process = {
+let process = {
   stdout: {
     write: writeToConsole
   }
@@ -165,11 +187,19 @@ var process = {
 /****************************************************************/
 // setup
 
-var memory = undefined;
-var inputBuffer = undefined;
-var callback = undefined;
-var view = undefined;
-var wasmExports = undefined;
+let memory : ArrayBuffer | SharedArrayBuffer;
+let inputBuffer = '';
+let callback = function() { throw Error('callback undefined'); };
+let view : Int32Array;
+
+interface Asyncify {
+  asyncify_start_unwind(number) : void;
+  asyncify_start_rewind(number) : void;
+  asyncify_stop_rewind() : void;
+  main() : void;
+}
+
+let wasmExports : Asyncify;
 
 export function setMemory(m) {
   memory = m;
@@ -180,8 +210,8 @@ export function setWasmExports(m) {
   wasmExports = m;
 }
 
-export function setFS(f) {
-  fs = f;
+export function setUrlRoot(u) {
+  urlRoot = u;
 }
 
 export function setCallback(cb) {
@@ -192,13 +222,16 @@ export function setInput(input) {
   inputBuffer = input;
 }
 
-var DATA_ADDR = 900 * 1024*64;
-var END_ADDR = 1000 * 1024*64;
-var windingDepth = 0;
+let DATA_ADDR = 900 * 1024*64;
+let END_ADDR = 1000 * 1024*64;
+let windingDepth = 0;
 
 function startUnwind() {
-  view[DATA_ADDR >> 2] = DATA_ADDR + 8;
-  view[DATA_ADDR + 4 >> 2] = END_ADDR;
+  if (view) {
+    view[DATA_ADDR >> 2] = DATA_ADDR + 8;
+    view[DATA_ADDR + 4 >> 2] = END_ADDR;
+  }
+  
   wasmExports.asyncify_start_unwind(DATA_ADDR);
   windingDepth = windingDepth + 1;
 }
@@ -220,7 +253,7 @@ function stopRewind() {
 // provide time back to tex
 
 export function getCurrentMinutes() {
-  var d = (new Date());
+  let d = (new Date());
   return 60 * (d.getHours()) + d.getMinutes();
 }
   
@@ -240,23 +273,23 @@ export function getCurrentYear() {
 // print
 
 export function printString(descriptor, x) {
-    var file = (descriptor < 0) ? {stdout:true} : files[descriptor];
-    var length = new Uint8Array( memory, x, 1 )[0];
-    var buffer = new Uint8Array( memory, x+1, length );
-    var string = String.fromCharCode.apply(null, buffer);
+  let file = (descriptor < 0) ? {stdout:true} : files[descriptor];
+  let length = new Uint8Array( memory, x, 1 )[0];
+  let buffer = new Uint8Array( memory, x+1, length );
+  let string = String.fromCharCode.apply(null, Array.from(buffer));
 
-    if (file.stdout) {
-      process.stdout.write(string);
-      return;
-    }
-
+  if (file.stdout) {
+    process.stdout.write(string);
+    return;
+  }
+  
   writeSync( file, Buffer.from(string) );    
 }
   
 export function printBoolean(descriptor, x) {
-    var file = (descriptor < 0) ? {stdout:true} : files[descriptor];    
+    let file = (descriptor < 0) ? {stdout:true} : files[descriptor];    
 
-    var result = x ? "TRUE" : "FALSE";
+    let result = x ? "TRUE" : "FALSE";
 
     if (file.stdout) {
       process.stdout.write(result);
@@ -266,19 +299,19 @@ export function printBoolean(descriptor, x) {
   writeSync( file, Buffer.from(result) );    
 }
 export function printChar(descriptor, x) {
-  var file = (descriptor < 0) ? {stdout:true} : files[descriptor];        
+  let file = (descriptor < 0) ? {stdout:true} : files[descriptor];        
   if (file.stdout) {
     process.stdout.write(String.fromCharCode(x));
     return;
   }
   
-  var b = Buffer.alloc(1);
+  let b = Buffer.alloc(1);
   b[0] = x;
   writeSync( file, b );
 }
 
 export function printInteger(descriptor, x) {
-  var file = (descriptor < 0) ? {stdout:true} : files[descriptor];            
+  let file = (descriptor < 0) ? {stdout:true} : files[descriptor];            
   if (file.stdout) {
     process.stdout.write(x.toString());
     return;
@@ -288,7 +321,7 @@ export function printInteger(descriptor, x) {
 }
 
 export function printFloat(descriptor, x) {
-  var file = (descriptor < 0) ? {stdout:true} : files[descriptor];                
+  let file = (descriptor < 0) ? {stdout:true} : files[descriptor];                
   if (file.stdout) {
     process.stdout.write(x.toString());
     return;
@@ -298,7 +331,7 @@ export function printFloat(descriptor, x) {
 }
 
 export function printNewline(descriptor, x) {
-  var file = (descriptor < 0) ? {stdout:true} : files[descriptor];
+  let file = (descriptor < 0) ? {stdout:true} : files[descriptor];
   
   if (file.stdout) {
     process.stdout.write("\n");
@@ -309,54 +342,55 @@ export function printNewline(descriptor, x) {
 }
 
 export function reset(length, pointer) {
-    var buffer = new Uint8Array( memory, pointer, length );
-    var filename = String.fromCharCode.apply(null, buffer);
+  let buffer = new Uint8Array( memory, pointer, length );
+  let filename = String.fromCharCode.apply(null, Array.from(buffer));
 
-    filename = filename.replace(/ +$/g,'');
-    filename = filename.replace(/^\*/,'');    
-    filename = filename.replace(/^TeXfonts:/,'');    
+  filename = filename.replace(/ +$/g,'');
+  filename = filename.replace(/^\*/,'');    
+  filename = filename.replace(/^TeXfonts:/,'');    
 
-    if (filename == 'TeXformats:TEX.POOL')
-      filename = "tex.pool";
+  if (filename == 'TeXformats:TEX.POOL')
+    filename = "tex.pool";
 
-    if (filename == "TTY:") {
-      files.push({ filename: "stdin",
-                   stdin: true,
-                   position: 0,
-                   erstat: 0
-                 });
-      return files.length - 1;
-    }
-
+  if (filename == "TTY:") {
+    files.push({ filename: "stdin",
+                 stdin: true,
+                 position: 0,
+                 erstat: 0
+               });
+    return files.length - 1;
+  }
+  
   return openSync(filename,'r');
 }
 
 export function rewrite(length, pointer) {
-    var buffer = new Uint8Array( memory, pointer, length );
-    var filename = String.fromCharCode.apply(null, buffer);    
+  let buffer = new Uint8Array( memory, pointer, length );
+  let filename = String.fromCharCode.apply(null, Array.from(buffer));    
   
-    filename = filename.replace(/ +$/g,'');    
-    
-    if (filename == "TTY:") {
-      files.push({ filename: "stdout",
-                   stdout: true,
-                   erstat: 0,                   
-                 });
-      return files.length - 1;
-    }
-    
+  filename = filename.replace(/ +$/g,'');    
+  
+  if (filename == "TTY:") {
+    files.push({ filename: "stdout",
+                 stdout: true,
+                 position: 0,
+                 erstat: 0,                   
+               });
+    return files.length - 1;
+  }
+  
   return openSync(filename, 'w');
 }
 
 export function close(descriptor) {
-    var file = files[descriptor];
+    let file = files[descriptor];
 
     if (file.descriptor)
       closeSync( file.descriptor );
 }
 
 export function eof(descriptor) {
-    var file = files[descriptor];
+    let file = files[descriptor];
     
     if (file.eof)
       return 1;
@@ -365,12 +399,12 @@ export function eof(descriptor) {
 }
 
 export function erstat(descriptor) {
-    var file = files[descriptor];
+    let file = files[descriptor];
     return file.erstat;
 }
 
 export function eoln(descriptor) {
-    var file = files[descriptor];
+    let file = files[descriptor];
 
     if (file.eoln)
       return 1;
@@ -379,45 +413,45 @@ export function eoln(descriptor) {
 }
     
 export function get(descriptor, pointer, length) {
-    var file = files[descriptor];
+  let file = files[descriptor];
 
-    var buffer = new Uint8Array( memory );
+  let buffer = new Uint8Array( memory );
     
-    if (file.stdin) {
-      if (file.position >= inputBuffer.length) {
-	buffer[pointer] = 13;
+  if (file.stdin) {
+    if (file.position >= inputBuffer.length) {
+      buffer[pointer] = 13;
+      file.eof = true;
+      file.eoln = true;
+    } else
+      buffer[pointer] = inputBuffer[file.position].charCodeAt(0);
+  } else {
+    if (file.descriptor) {
+      if (readSync( file, buffer, pointer, length, file.position ) == 0) {
+        buffer[pointer] = 0;
         file.eof = true;
         file.eoln = true;
-      } else
-	buffer[pointer] = inputBuffer[file.position].charCodeAt(0);
-    } else {
-      if (file.descriptor) {
-        if (readSync( file, buffer, pointer, length, file.position ) == 0) {
-          buffer[pointer] = 0;
-          file.eof = true;
-          file.eoln = true;
-          return;
-        }
-      } else {
-        file.eof = true;
-        file.eoln = true;        
         return;
       }
+    } else {
+      file.eof = true;
+      file.eoln = true;        
+      return;
     }
-    
-    file.eoln = false;
-    if (buffer[pointer] == 10)
-      file.eoln = true;
-    if (buffer[pointer] == 13)
-      file.eoln = true;
-
-    file.position = file.position + length;
+  }
+  
+  file.eoln = false;
+  if (buffer[pointer] == 10)
+    file.eoln = true;
+  if (buffer[pointer] == 13)
+    file.eoln = true;
+  
+  file.position = file.position + length;
 }
 
 export function put(descriptor, pointer, length) {
-  var file = files[descriptor];
+  let file = files[descriptor];
   
-  var buffer = new Uint8Array( memory );
+  let buffer = new Uint8Array( memory );
 
   writeSync( file, buffer, pointer, length );
 }

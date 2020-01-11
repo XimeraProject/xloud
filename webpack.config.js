@@ -13,7 +13,6 @@ module.exports = {
   ],
   entry: {
     bundle: './src/index.ts',
-    worker: './src/worker.ts',
     tex: './src/tex.ts',
   },
   mode: "development",

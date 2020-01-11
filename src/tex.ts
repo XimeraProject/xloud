@@ -1,19 +1,18 @@
 import * as library from './library';
 import pako from 'pako';
 import fetchStream from 'fetch-readablestream';
-import FS from '@isomorphic-git/lightning-fs';
 
 import kpathsea from './kpathsea';
 
 let pages = 1000;
 var coredump;
-let code = undefined;
+let code : ArrayBuffer | SharedArrayBuffer;
 
 async function load() {
   let tex = await fetch('/tex/out2.wasm');
   code = await tex.arrayBuffer();
 
-  let response = await fetchStream('/tex/core12.dump.gz');
+  let response = await fetchStream('/tex/core13.dump.gz');
   const reader = response.body.getReader();
   const inf = new pako.Inflate();
   
@@ -39,7 +38,6 @@ function copy(src)  {
 
 self.onmessage = async function (e : any) {
   let repositoryName = e.data.repositoryName;
-  let directoryName = e.data.directoryName;
   let pathName = e.data.pathName;
   
   await load();
@@ -49,22 +47,22 @@ self.onmessage = async function (e : any) {
   let buffer = new Uint8Array( memory.buffer, 0, pages*65536 );
   buffer.set( copy(coredump) );
 
-  const fs = new FS(repositoryName);
-  library.setFS( fs );
+  library.setUrlRoot( `https://raw.githubusercontent.com/${repositoryName}/master/` );
+  
   library.setMemory( memory.buffer );
-  let filename = directoryName + '/' + pathName + '.tex';
-  //library.setInput( " " + filename + " \n\\end\n" );
+  let filename = pathName + '.tex';
+
   library.setInput( " \\PassOptionsToClass{web}{ximera}\\PassOptionsToPackage{margin=1in,paperwidth=" + (e.data.paperwidth + 144).toString() + "pt,paperheight=100in}{geometry}\n\\input{" + filename + " }\n\\end\n" );
   
   library.setCallback( function() {
-    let filename = directoryName + '/' + pathName + '.dvi';
+    let filename = pathName + '.dvi';
     //let data = library.readFileSync( filename )
     let data = library.readFileSync( 'texput.dvi' );
-    self.postMessage({dvi: data}, [data.buffer]);
+    self.postMessage({dvi: data}, "*", [data.buffer]);
   });
   
   const compiled = new WebAssembly.Module(code);
-  const instance;
+  let instance;
 
   try {
     instance = await WebAssembly.instantiate(compiled, { library: library,
