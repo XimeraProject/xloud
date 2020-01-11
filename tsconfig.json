@@ -5,7 +5,7 @@
     "declaration": true,
     "outDir": "dist",
     "strict": true,
-    "lib": ["es2018", "dom"],
+    "lib": ["es2018", "dom", "webworker"],
     "module": "commonjs",
     "esModuleInterop": true,    
     "resolveJsonModule": true,

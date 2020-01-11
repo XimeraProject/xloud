@@ -36,7 +36,7 @@ function copy(src)  {
   return dst;
 }
 
-self.onmessage = async function (e : any) {
+self.onmessage = async function (e : MessageEvent) {
   let repositoryName = e.data.repositoryName;
   let pathName = e.data.pathName;
   
@@ -58,7 +58,7 @@ self.onmessage = async function (e : any) {
     let filename = pathName + '.dvi';
     //let data = library.readFileSync( filename )
     let data = library.readFileSync( 'texput.dvi' );
-    self.postMessage({dvi: data}, "*", [data.buffer]);
+    self.postMessage({dvi: data}, [data.buffer]);
   });
   
   const compiled = new WebAssembly.Module(code);
