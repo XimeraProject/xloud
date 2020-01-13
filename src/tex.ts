@@ -5,15 +5,15 @@ import path from 'path';
 
 import kpathsea from './kpathsea';
 
-let pages = 1000;
+let pages = 1500;
 var coredump;
 let code : ArrayBuffer | SharedArrayBuffer;
 
 async function load() {
-  let tex = await fetch('/tex/out2.wasm');
+  let tex = await fetch('/tex/out.8c3fe3450cb5.wasm');
   code = await tex.arrayBuffer();
 
-  let response = await fetchStream('/tex/core13.dump.gz');
+  let response = await fetchStream('/tex/core.3c18eb846463.dump.gz');
   const reader = response.body.getReader();
   const inf = new pako.Inflate();
   

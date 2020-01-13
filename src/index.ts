@@ -46,6 +46,11 @@ async function displayDvi(dvi) {
   if (div) {
     div.innerHTML = "";
     div.innerHTML = html;
+    
+    if (machine.title)
+      document.title = machine.title + " - Ximera";
+    else
+      document.title = "Ximera";
   } else {
     throw 'missing #page on the page';
   }

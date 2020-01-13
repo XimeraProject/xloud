@@ -50,6 +50,21 @@ function openSync( filename, mode )
 {
   console.log("attempting to open",filename);
 
+  // FIXME: this seems like a bug with TeXlive?
+  if (filename.startsWith('"')) {
+    filename = filename.replace(/"/g,'');
+  }
+
+  if ((filename === 'texput.aux') || (filename === 'texput.dvi')) {
+    files.push({ filename: filename,
+		 position: 0,
+		 erstat: 0,
+		 buffer: new Uint8Array(),
+		 descriptor: files.length
+	       });
+    return files.length - 1;
+  }
+  
   if (!sleeping) {
     startUnwind();
     sleeping = true;
@@ -77,6 +92,7 @@ function openSync( filename, mode )
 	  });
 	});
       } else {
+        console.log("Checking",urlRoot + path.join( currentDirectory, filename ));
 	fetch( urlRoot + path.join( currentDirectory, filename ) )
           .then( function( response ) {
             if (response.ok) {
@@ -121,19 +137,6 @@ function openSync( filename, mode )
 
     return files.length - 1;
   }
-  
-  //  buffer = await fs.readFile(filename);
-
-  /*
-  if (filesystem[filename]) {
-    buffer = Uint8Array.from(Buffer.from(filesystem[filename], 'base64'));
-  }
-
-  if (filename.match(/\.tfm$/)) {
-    buffer = Uint8Array.from( tfmData( filename.replace(/\.tfm$/, '' ) ) );
-  }
-  */
-  
 }
 
 function closeSync( fd ) {
