@@ -5,15 +5,18 @@ import path from 'path';
 
 import kpathsea from './kpathsea';
 
+import texBinary from '../tex/out.8c3fe3450cb5.wasm';
+import texCore from '../tex/core.3c18eb846463.dump.gz';
+
 let pages = 1500;
 var coredump;
 let code : ArrayBuffer | SharedArrayBuffer;
 
 async function load() {
-  let tex = await fetch('/tex/out.8c3fe3450cb5.wasm');
+  let tex = await fetch(texBinary);
   code = await tex.arrayBuffer();
 
-  let response = await fetchStream('/tex/core.3c18eb846463.dump.gz');
+  let response = await fetchStream(texCore);
   const reader = response.body.getReader();
   const inf = new pako.Inflate();
   
@@ -56,6 +59,10 @@ self.onmessage = async function (e : MessageEvent) {
   library.setDirectory( path.dirname( filename ) );
   
   library.setInput( " \\PassOptionsToClass{web}{ximera}\\PassOptionsToPackage{margin=1in,paperwidth=" + (e.data.paperwidth + 144).toString() + "pt,paperheight=100in}{geometry}\n\\input{" + path.basename( filename ) + "}\n\\end\n" );
+
+  library.setConsoleWriter( function(x) {
+    self.postMessage({console: x});
+  });
   
   library.setCallback( function() {
     let filename = pathName + '.dvi';

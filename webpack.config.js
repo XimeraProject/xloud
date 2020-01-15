@@ -1,6 +1,7 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const WorkerPlugin = require('worker-plugin');
 
 module.exports = {
   plugins: [
@@ -9,11 +10,11 @@ module.exports = {
                           }),
     new MiniCssExtractPlugin({
       filename: 'style.css',
-    })
+    }),
+    new WorkerPlugin()
   ],
   entry: {
-    bundle: './src/index.ts',
-    tex: './src/tex.ts',
+    bundle: './src/index.tsx',
   },
   mode: "development",
   devtool: 'inline-source-map',
@@ -23,6 +24,24 @@ module.exports = {
         test: /\.tsx?$/,
         use: 'ts-loader',
         exclude: /node_modules/
+      },
+      {
+        test: /\.css$/,
+        use: ['style-loader', 'css-loader']
+      },
+      {
+        test: /\.wasm$/,
+        loader: 'file-loader',
+        type: "javascript/auto"
+      },
+      {
+        test: /\.dump.gz$/,
+        loader: 'file-loader',
+        type: "javascript/auto"
+      },
+      {
+        test: /\.svg$/,
+        loader: 'file-loader'
       },
       {
         test: /\.(scss)$/,

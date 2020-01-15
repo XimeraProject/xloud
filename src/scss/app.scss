@@ -1,4 +1,4 @@
-@import "~bootstrap/scss/bootstrap";
+@import '~bootstrap/dist/css/bootstrap.min.css';
 @import "./fonts.scss";
 
 .bd-example-modal-lg .modal-dialog{
@@ -6,6 +6,31 @@
     position: relative;
     margin: 0 auto;
     top: calc(50% - 24px);
+}
+
+.footer a {
+    color: #999;
+}
+
+.footer a:hover {
+    color: #fff;
+}
+
+main > .container {
+  padding: 60px 15px 0;
+}
+
+.footer {
+  background-color: #f5f5f5;
+}
+
+.footer > .container {
+  padding-right: 15px;
+  padding-left: 15px;
+}
+
+code {
+  font-size: 80%;
 }
 
 .bd-example-modal-lg .modal-dialog .modal-content{

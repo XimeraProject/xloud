@@ -9,7 +9,9 @@
     "module": "commonjs",
     "esModuleInterop": true,    
     "resolveJsonModule": true,
-    "noImplicitAny": false
+    "noImplicitAny": false,
+    "jsx": "react",
+    "jsxFactory": "Snabbdom.createElement"
   },
   "include": ["src"]
 }

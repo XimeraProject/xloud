@@ -228,6 +228,10 @@ export function setCallback(cb) {
   callback = cb;
 }
 
+export function setConsoleWriter(cb) {
+  process.stdout.write = cb;
+}
+
 export function setInput(input) {
   inputBuffer = input;
 }
