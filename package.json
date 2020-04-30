@@ -39,7 +39,7 @@
     "dvi2html": "0.0.2",
     "fetch-readablestream": "^0.2.0",
     "idb": "^4.0.5",
-    "jquery": "^3.4.1",
+    "jquery": "^3.5.0",
     "node-fetch": "^2.6.0",
     "object-sizeof": "^1.5.2",
     "pako": "^1.0.10",
