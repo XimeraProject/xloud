@@ -26,17 +26,11 @@ main > .container {
   padding-left: 15px;
 }
 
-.terminal {
-    background-color: black;
-    color: white;
-    overflow-x: hidden;
-    overflow-y: scroll;
-}
-
 .terminal pre {
-    padding: 6pt;
-    min-height: 100%;
+    font-family: monospace;
+    padding: 0pt;
     margin: 0;
+    overflow: hidden;
 }
 
 .gutter {

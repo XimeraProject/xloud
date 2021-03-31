@@ -16,7 +16,6 @@ export function update( message, state, dispatch ) {
 
 export function init( params, state, dispatch ) {
   let url = `/github/${params.owner}/${params.repo}/${params.filename}.tex`;
-  console.log('init',url);
   
   fetch(url)
     .then((response) => {
@@ -39,8 +38,6 @@ export function init( params, state, dispatch ) {
 }
 
 export function view( {state, dispatch} ) {
-  console.log(state);
-  
   if (state.loading)
     return <Spinner state={state} dispatch={dispatch}/>;
 

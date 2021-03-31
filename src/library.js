@@ -2,9 +2,9 @@ import path from 'path';
 
 import Kpathsea from '@ximeraproject/kpathsea';
 import lsr from './lsr.json';
-import { download } from './texlive';
+import { download } from './texlive.js';
 
-const kpathsea = new Kpathsea({ db: lsr });
+const kpathsea = new Kpathsea.default({ db: lsr });
 
 async function findMatch(partialPath) {
   if (kpathsea) return kpathsea.findMatch(partialPath);
@@ -22,17 +22,33 @@ let currentDirectory = '';
 let texput;
 let texputaux = undefined;
 let texmf = {};
+let texliveVersion;
 
 export function deleteEverything() {
   files = [];
 }
 
+export function setTexliveVersion(v) {
+  texliveVersion = v;
+}
+
 export function setTexput(buffer) {
-  texput = Buffer.from(buffer);
+  if (typeof buffer === 'string') {
+    let encoder = new TextEncoder();
+    texput = encoder.encode(buffer);
+    return;
+  }
+  
+  texput = Uint8Array.from(buffer);
 }
 
 export function setTexputAux(buffer) {
-  console.log("settexput",buffer);
+  if (typeof buffer === 'string') {
+    let encoder = new TextEncoder();
+    texputaux = encoder.encode(buffer);
+    return;
+  }
+
   texputaux = buffer;
 }
 
@@ -45,7 +61,7 @@ export function writeFileSync(filename, buffer) {
     filename,
     position: 0,
     erstat: 0,
-    buffer: new Uint8Array(Buffer.from(buffer)),
+    buffer: new Uint8Array(buffer),
     descriptor: files.length,
   });
 }
@@ -75,7 +91,6 @@ function openSync(filename, mode) {
   if (filename === 'texput.aux') {
     let buffer = new Uint8Array();
     if (texputaux) {
-      console.log("BUFFER=",buffer);
       buffer = new Uint8Array(texputaux);
     }
     
@@ -117,8 +132,7 @@ function openSync(filename, mode) {
     return files.length - 1;
   }
 
-
-    if (filename === 'texput.log') {
+  if (filename === 'texput.log') {
     files.push({
       filename,
       position: 0,
@@ -153,10 +167,14 @@ function openSync(filename, mode) {
     findMatch(filename).then((fullFilename) => {
 
       if (filename == 'pgfsys-ximera.def') fullFilename = '/local-texmf/tex/latex/ximeraLatex/pgfsys-ximera.def';
+      if (filename == 'ximera.cls') fullFilename = '/local-texmf/tex/latex/ximeraLatex/ximera.cls?' + Date.now();
 
       console.log('looking up', filename,'as',fullFilename);
       
       if (fullFilename) {
+        if (fullFilename.startsWith('/texmf'))
+          fullFilename = '/' + texliveVersion + fullFilename;
+        
 	console.log('Found it in ', fullFilename);
 	download(fullFilename).then((buffer) => {
 	  files.push({
@@ -289,6 +307,12 @@ export function setConsoleWriter(cb) {
 }
 
 export function setInput(input) {
+  if (typeof input === 'string') {
+    let encoder = new TextEncoder();
+    inputBuffer = encoder.encode(input);
+    return;
+  }
+  
   inputBuffer = input;
 }
 
@@ -353,7 +377,7 @@ export function printString(descriptor, x) {
     return;
   }
   
-  writeSync(file, Buffer.from(string));    
+  writeSync(file, buffer);
 }
   
 export function printBoolean(descriptor, x) {
@@ -366,7 +390,7 @@ export function printBoolean(descriptor, x) {
       return;
     }
 
-  writeSync(file, Buffer.from(result));    
+  writeSync(file, Uint8Array.from(result));    
 }
 export function printChar(descriptor, x) {
   const file = (descriptor < 0) ? { stdout: true } : files[descriptor];        
@@ -375,8 +399,7 @@ export function printChar(descriptor, x) {
     return;
   }
   
-  const b = Buffer.alloc(1);
-  b[0] = x;
+  const b = Uint8Array.from([x]);
   writeSync(file, b);
 }
 
@@ -387,7 +410,7 @@ export function printInteger(descriptor, x) {
     return;
   }
 
-  writeSync(file, Buffer.from(x.toString()));
+  writeSync(file, Uint8Array.from(x.toString()));
 }
 
 export function printFloat(descriptor, x) {
@@ -397,7 +420,7 @@ export function printFloat(descriptor, x) {
     return;
   }
 
-  writeSync(file, Buffer.from(x.toString()));
+  writeSync(file, Uint8Array.from(x.toString()));
 }
 
 export function printNewline(descriptor, x) {
@@ -408,7 +431,7 @@ export function printNewline(descriptor, x) {
     return;
   }
 
-  writeSync(file, Buffer.from('\n'));
+  writeSync(file, Uint8Array.from([10]));
 }
 
 export function reset(length, pointer) {
@@ -489,7 +512,7 @@ export function get(descriptor, pointer, length) {
       buffer[pointer] = 13;
       file.eof = true;
       file.eoln = true;
-    } else buffer[pointer] = inputBuffer[file.position].charCodeAt(0);
+    } else buffer[pointer] = inputBuffer[file.position];//.charCodeAt(0);
   } else if (file.descriptor) {
       if (readSync(file, buffer, pointer, length, file.position) == 0) {
         buffer[pointer] = 0;
@@ -545,7 +568,7 @@ export function inputln(descriptor, bypass_eoln, bufferp, firstp, lastp, max_buf
   }
 
   if (file.content === undefined) 
-    file.content = Buffer.from(file.buffer);
+    file.content = Uint8Array.from(file.buffer);
   
     // cf.\ Matthew 19\thinspace:\thinspace30
     last[0] = first[0];
@@ -564,13 +587,16 @@ export function inputln(descriptor, bypass_eoln, bufferp, firstp, lastp, max_buf
       
     if (file.position2 >= file.content.length) {
       if (file.stdin) {
+        console.log('reached end of input');
         if (callback) callback();
       }
       
       file.eof = true;
       return false;
     } else {
-      var bytesCopied = file.content.copy( buffer, first[0], file.position2, endOfLine );
+      let src = file.content.slice( file.position2, endOfLine );
+      buffer.set( src, first[0] );
+      var bytesCopied = src.length;
       
       last[0] = first[0] + bytesCopied;
       
@@ -608,7 +634,7 @@ export function evaljs(str_number, str_poolp, str_startp, pool_ptrp, pool_size, 
       print: function(s) {
         const encoder = new TextEncoder('ascii');
         const view = encoder.encode(s);
-        const b = Buffer.from(view);
+        const b = Uint8Array.from(view);
         str_pool.set( b, pool_ptr[0] );
         pool_ptr[0] += view.length;
       },

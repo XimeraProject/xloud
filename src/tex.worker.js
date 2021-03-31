@@ -1,6 +1,7 @@
-import texCorePath from '../tex/core.b555c64c84cf.dump.gz';
+import texCorePath from '../tex/core.dfdb85e110a7.dump.gz';
 import texBinaryPath from '../tex/out.f9c8838f85a0.wasm';
-import * as library from './library';
+
+import * as library from './library.js';
 
 import pako from 'pako';
 import { ReadableStream } from "web-streams-polyfill";
@@ -8,7 +9,7 @@ import fetchStream from 'fetch-readablestream';
 
 let pages = 2500;
 
-var coredump;
+var coredump = undefined;
 var code;
 let compiled;
 
@@ -16,9 +17,14 @@ var theTerminal;
 var editor;
 
 async function load() {
+  if (coredump)
+    return coredump;
+  
   let tex = await fetch(texBinaryPath);
+  postMessage({text: "."});
+  
   code = await tex.arrayBuffer();
-
+  
   let response = await fetchStream(texCorePath);
   const reader = response.body.getReader();
   const inf = new pako.Inflate();
@@ -27,6 +33,7 @@ async function load() {
     while (true) {
       const {done, value} = await reader.read();
       inf.push(value, done);
+      postMessage({text: "."});      
       if (done) break;
     }
   }
@@ -35,10 +42,12 @@ async function load() {
   }
 
   compiled = new WebAssembly.Module(code);
+  postMessage({text: "."});
+  
   coredump = new Uint8Array( inf.result, 0, pages*65536 );
-}
 
-load();
+  return coredump;
+}
 
 function copy(src)  {
   var dst = new Uint8Array(src.length);
@@ -47,17 +56,21 @@ function copy(src)  {
 }
 
 async function compile(callback) {
-  const memory = new WebAssembly.Memory({ initial: pages, maximum: pages });
-  
+  postMessage({text: "Loading TeX image..."});
+  await load();
+  postMessage({text: "Loaded!\n"});
+
+  postMessage({text: "Copying memory..."});  
+  const memory = new WebAssembly.Memory({ initial: pages, maximum: pages });  
   const buffer = new Uint8Array(memory.buffer, 0, pages * 65536);
-  console.log('about to copy');
   buffer.set(copy(coredump));
-  
   library.setMemory(memory.buffer);
+  library.setTexliveVersion( process.env.TEXLIVE_VERSION );
+  postMessage({text: "Copied!\n"});
 
   library.setDirectory('');
-  
-  library.setInput(' texput.tex');
+  library.setInput(' \\PassOptionsToClass{web}{ximera}\\input{texput}');
+  //library.setInput(' texput.tex');
   
   library.setCallback(() => {
     const filename = 'texput.dvi';
@@ -66,34 +79,48 @@ async function compile(callback) {
     const data = library.readFileSync('texput.dvi');
     //self.postMessage({ dvi: data }, [data.buffer]);
     console.log('**** DONE');
+
+    const aux = library.readFileSync('texput.aux');
+    console.log('AUX',aux);
+    
     callback( null, data.buffer );
   });
   
   let instance;
 
   try {
+    postMessage({text: "Instantiating WebAssembly..."});    
     instance = await WebAssembly.instantiate(compiled, {
       library,
       env: { memory },
     });
   } catch (err) {
     console.log(err);
-    // reject(err);
   }
     
   const wasmExports = instance.exports;
   library.setWasmExports(wasmExports);
-    
+
+  postMessage({text: "Launched!\n\n"});
   wasmExports.main();
 }
 
+function fetchInput(url) {
+  return new Promise( function(resolve,reject) {
+    fetch(url)
+      .then((response) => {
+        if (!response.ok) {
+          reject(response.statusText);
+        } else 
+          resolve(response.text());
+      })
+      .catch(reject);
+  });
+}
+
 onmessage = async function(e) {
-  console.log('Message received from main script');
-  let source = e.data.source;
-  console.log(source);
-  //var workerResult = 'Result: ' + (e.data[0] * e.data[1]);
-  //console.log('Posting message back to main script');
-  //postMessage(workerResult);
+  let url = e.data.url;
+  let source = await fetchInput(url);
 
   let texmf = {};
   library.deleteEverything();

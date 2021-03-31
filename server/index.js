@@ -35,10 +35,14 @@ app.use(`/${process.env.TEXLIVE_VERSION}/texmf`,
 // FIXME: how should this be cached?
 app.use('/texmf-local', express.static(path.resolve(__dirname, '../texmf-local')));
 
+// FIXME: get repo information
+app.get('/github/:owner/:repo.json', github.findRepository, github.getRepository );
+
 // FIXME: should include some rate-limiting
-app.get('/github/:owner/:repo/:path(*.tex)', github.getRepository, github.get );
-app.get('/github/:owner/:repo/:path(*.dvi)', github.getRepository, github.get );
-app.get('/github/:owner/:repo/:path(*.png)', github.getRepository, github.get );
+app.get('/github/:owner/:repo/:path(*.tex)', github.findRepository, github.get );
+app.get('/github/:owner/:repo/:path(*.sty)', github.findRepository, github.get );
+app.get('/github/:owner/:repo/:path(*.dvi)', github.findRepository, github.get );
+app.get('/github/:owner/:repo/:path(*.png)', github.findRepository, github.get );
 
 // FIXME: should send 'isomorphic' content 
 app.get('*', function (request, response) {

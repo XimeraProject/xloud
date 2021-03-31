@@ -1,5 +1,4 @@
 import Snabbdom from 'snabbdom-pragma';
-import Cmd from './cmd';
 
 function Award( { id } ) {
   return <a href={`http://www.nsf.gov/awardsearch/showAward?AWD_ID=${id}`}>DUE-{id}</a>;

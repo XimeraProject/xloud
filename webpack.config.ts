@@ -1,12 +1,14 @@
 import path from 'path';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
+import Dotenv from 'dotenv-webpack';
 
 //import { fileURLToPath } from 'url';
 //const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default {
   plugins: [
+    new Dotenv(),
     new HtmlWebpackPlugin({title: "Ximera",
                            template: 'src/index.html',
                            minify: {
@@ -16,7 +18,7 @@ export default {
                           }),
     new MiniCssExtractPlugin({
       filename: '[name].[contenthash].css',
-    }),    
+    }),
   ],
   entry: {
     bundle: './src/index.tsx',
@@ -24,6 +26,12 @@ export default {
   mode: "development",
   devtool: 'inline-source-map',
   resolve: {
+    fallback: {
+      "https": require.resolve("https-browserify"),
+      "path": require.resolve("path-browserify"),
+      "http": require.resolve("stream-http"),
+      "buffer": require.resolve("buffer/")
+    },
     extensions: [ '.tsx', '.ts', '.js' ],
     alias: {
       snabbdom: path.resolve(__dirname, 'node_modules', 'snabbdom', 'build', 'package')

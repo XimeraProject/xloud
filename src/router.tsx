@@ -5,11 +5,12 @@ import Route from 'route-parser';
 import FourOhFour from './four-oh-four';
 import ViewSource from './view-source';
 import Spinner from './spinner';
+import Page from './page';
 
 function findRoute( pathname, state, dispatch ) {
   // FIXME: ugh this is such an ugly hack
   if (pathname === '/') {
-    let href = '/ximeraproject/about/overview.tex';
+    let href = '/XimeraProject/about/overview.tex';
     setTimeout( () => history.replaceState(null, '', href), 100);
     setTimeout( () => dispatch(['navigate-to', href]), 100);
     return { ...state, component: {view: Spinner} };
@@ -18,6 +19,10 @@ function findRoute( pathname, state, dispatch ) {
   let r = new Route('/:owner/:repo/(*filename).tex');
   if (r.match(pathname))
     return {...ViewSource.init(r.match(pathname), state, dispatch), component: ViewSource };
+
+  r = new Route('/:owner/:repo/(*filename)');
+  if (r.match(pathname))
+    return {...Page.init(r.match(pathname), state, dispatch), component: Page };
 
   // No route found!
   return { ...state, component: FourOhFour };

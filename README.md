@@ -12,3 +12,11 @@ The real-time collaborative features are made possible by [ShareDB](https://gith
 # Running development version
 
 Deploy the frontend via `yarn run start` and the backend via `node server/index.js`.
+
+# Similar projects
+
+There are *many* projects which have some overlap with what Ximera does.  Some examples are
+
+* https://github.com/rbeezer/mathbook
+* https://github.com/softcover/softcover
+* https://github.com/RunestoneInteractive/RunestoneServer
