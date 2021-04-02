@@ -4,7 +4,7 @@ let
   pkgs = import <nixpkgs> {};
 in
 {
-  network.description = "tex.rossprogram.org";
+  network.description = "xloud.rossprogram.org";
 
   resources.ec2KeyPairs.myKeyPair = {
     accessKeyId = awsKeyId;
@@ -57,11 +57,11 @@ in
       recommendedTlsSettings = true;
     };
 
-    services.nginx.virtualHosts."tex-backend.rossprogram.org" = {
+    services.nginx.virtualHosts."xloud.rossprogram.org" = {
       forceSSL = true;
       enableACME = true;
       default = true;
-      root = "/var/www/tex-backend.rossprogram.org";
+      root = "/var/www/xloud.rossprogram.org";
       locations = {
         "/".proxyPass = "http://localhost:${config.systemd.services.node.environment.PORT}/";
         "/".proxyWebsockets = true;
@@ -71,7 +71,7 @@ in
     security.acme.acceptTerms = true;
     
     security.acme.certs = {
-      "tex-backend.rossprogram.org".email = "fowler@rossprogram.org";
+      "xloud.rossprogram.org".email = "fowler@rossprogram.org";
     };
     
     systemd.services.node = {
@@ -83,15 +83,18 @@ in
       environment = {
         NODE_ENV = "production";
 
+        TEXLIVE_VERSION=(lib.splitString "-" (lib.splitString "/" pkgs.texlive.combined.scheme-full)[2])[0];
         TEXMF = "${pkgs.texlive.combined.scheme-full}/share/texmf";
         PORT = toString 8000;
 
-        MONGODB_DATABASE = "tex";
+        MONGODB_DATABASE = "xloud";
         MONGODB_PORT = toString 27017;
+
+        GITHUB_ACCESS_TOKEN=builtins.readFile ./github.key;        
       };
       
       serviceConfig = {
-        ExecStart = "${app}/bin/tex.rossprogram.org";
+        ExecStart = "${app}/bin/xloud";
         User = "node";
         Restart = "always";
       };

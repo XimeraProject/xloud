@@ -1,6 +1,6 @@
 { stdenv, yarn2nix, texlive }:
 yarn2nix.mkYarnPackage rec {
-    name = "tex-rossprogram-org";
+    name = "xloud";
     src = ./.;
     packageJSON = ./package.json;
     yarnLock = ./yarn.lock;
@@ -11,9 +11,9 @@ yarn2nix.mkYarnPackage rec {
     '';
 
     meta = with stdenv.lib; {
-      description = "A real-time collaborative TeX editor";
+      description = "Interactively view TeX files on GitHub";
       license = licenses.agpl3;
-      homepage = "https://github.com/rossprogram/tex.rossprogram.org";
+      homepage = "https://github.com/XimeraProject/xloud";
       maintainers = with maintainers; [ kisonecat ];
       platforms = platforms.linux;
     };
