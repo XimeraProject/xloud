@@ -2,6 +2,7 @@ import path from 'path';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import Dotenv from 'dotenv-webpack';
+import webpack from 'webpack';
 
 //import { fileURLToPath } from 'url';
 //const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -19,6 +20,9 @@ export default {
     new MiniCssExtractPlugin({
       filename: '[name].[contenthash].css',
     }),
+    new webpack.ProvidePlugin({
+      Buffer: ['buffer', 'Buffer'],
+    })    
   ],
   entry: {
     bundle: './src/index.tsx',

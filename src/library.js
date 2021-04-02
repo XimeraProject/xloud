@@ -2,7 +2,6 @@ import path from 'path';
 
 import Kpathsea from '@ximeraproject/kpathsea';
 import lsr from './lsr.json';
-import { download } from './texlive.js';
 
 const kpathsea = new Kpathsea.default({ db: lsr });
 
@@ -11,18 +10,16 @@ async function findMatch(partialPath) {
   return undefined;
 }
 
-
 /****************************************************************/
 // fake files
 
-const filesystem = {};
 let files = [];
 let urlRoot = '';
 let currentDirectory = '';
 let texput;
 let texputaux = undefined;
-let texmf = {};
 let texliveVersion;
+let hsize = 6.5*72;
 
 export function deleteEverything() {
   files = [];
@@ -30,6 +27,35 @@ export function deleteEverything() {
 
 export function setTexliveVersion(v) {
   texliveVersion = v;
+}
+
+export async function download(url) {
+  try {
+    let cache = await self.caches.open(texliveVersion);
+    const request = new Request(url);
+
+    let response = await cache.match(request);
+    console.log('responhse=',response);
+    
+    let buffer;
+    if (response === undefined) {
+      response = await fetch(request);
+      buffer = response.clone().arrayBuffer();
+      cache.put(request, response);
+    } else {
+      buffer = response.arrayBuffer();
+    }
+
+    return buffer;
+  }
+  catch (err) {
+    console.log(err);
+    return new ArrayBuffer();
+  }
+}
+
+export function setHsize(s) {
+  hsize = s;
 }
 
 export function setTexput(buffer) {
@@ -50,10 +76,6 @@ export function setTexputAux(buffer) {
   }
 
   texputaux = buffer;
-}
-
-export function setTexmfExtra(t) {
-  texmf = t;
 }
 
 export function writeFileSync(filename, buffer) {
@@ -78,6 +100,8 @@ export function readFileSync(filename) {
 
   throw Error(`Could not find file ${filename}`);
 }
+
+let texmf = {};
 
 let sleeping = false;
 function openSync(filename, mode) {
@@ -145,25 +169,22 @@ function openSync(filename, mode) {
     return files.length - 1;
   }
 
-    if (texmf[filename]) {
-    const enc = new TextEncoder(); // always utf-8
-
-    files.push({
-      filename,
-      position: 0,
-      position2: 0,                               
-      erstat: 0,
-      buffer: enc.encode(texmf[filename]),
-      descriptor: files.length,
-    });
-    console.log('opened with handle',files.length - 1);
-    return files.length - 1;    
-  }
-  
   if (!sleeping) {
+    if (texmf[filename]) {
+      files.push({
+        filename,
+	position: 0,
+        position2: 0,                                     
+	erstat: 0,
+	buffer: new Uint8Array(texmf[filename]),
+	descriptor: files.length,
+      });
+      return files.length - 1;
+    }
+    
     startUnwind();
     sleeping = true;
-
+    
     findMatch(filename).then((fullFilename) => {
 
       if (filename == 'pgfsys-ximera.def') fullFilename = '/local-texmf/tex/latex/ximeraLatex/pgfsys-ximera.def';
@@ -176,30 +197,44 @@ function openSync(filename, mode) {
           fullFilename = '/' + texliveVersion + fullFilename;
         
 	console.log('Found it in ', fullFilename);
-	download(fullFilename).then((buffer) => {
+
+        if (texmf[filename]) {
 	  files.push({
             filename,
 	    position: 0,
             position2: 0,                                     
 	    erstat: 0,
-	    buffer: new Uint8Array(buffer),
+	    buffer: new Uint8Array(texmf[filename]),
 	    descriptor: files.length,
 	  });
-	  startRewind();
-	}).catch((error) => {
-          console.error(error);
-          console.log('Missing file', filename);
+          startRewind();
+        } else {
+	  download(fullFilename).then((buffer) => {
+	    files.push({
+              filename,
+	      position: 0,
+              position2: 0,                                     
+	      erstat: 0,
+	      buffer: new Uint8Array(buffer),
+	      descriptor: files.length,
+	    });
+
+	    startRewind();
+	  }).catch((error) => {
+            console.error(error);
+            console.log('Missing file', filename);
 	      
-	  files.push({
-            filename,
-	    position: 0,
-            position2: 0,                                     
-	    erstat: (mode == 'r') ? 1 : 0,
-	    buffer: new Uint8Array(),
-	    descriptor: files.length,
-	  });
-	  startRewind();
-        });
+	    files.push({
+              filename,
+	      position: 0,
+              position2: 0,                                     
+	      erstat: (mode == 'r') ? 1 : 0,
+	      buffer: new Uint8Array(),
+	      descriptor: files.length,
+	    });
+	    startRewind();
+          });
+        }
       } else {
 	console.log('File does not exist:', filename);
 	      
@@ -277,7 +312,6 @@ let memory;
 let inputBuffer = '';
 let callback = function () { throw Error('callback undefined'); };
 let view;
-
 
 let wasmExports;
 
@@ -549,7 +583,7 @@ export function getfilesize(length, pointer) {
 }
 
 export function snapshot() {
-  console.log('(-snapshot-)');
+  console.log('-snapshot-');
   return 1;
 }
 
@@ -629,7 +663,7 @@ export function evaljs(str_number, str_poolp, str_startp, pool_ptrp, pool_size, 
         target[2*prop] = value;
       }
     };    
-    
+
     var tex = {
       print: function(s) {
         const encoder = new TextEncoder('ascii');
@@ -638,7 +672,8 @@ export function evaljs(str_number, str_poolp, str_startp, pool_ptrp, pool_size, 
         str_pool.set( b, pool_ptr[0] );
         pool_ptr[0] += view.length;
       },
-      count: new Proxy(count, handler)
+      count: new Proxy(count, handler),
+      hsize: hsize,
     };
 
     var f = Function(['tex'],string);

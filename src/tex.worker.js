@@ -7,6 +7,8 @@ import pako from 'pako';
 import { ReadableStream } from "web-streams-polyfill";
 import fetchStream from 'fetch-readablestream';
 
+import * as localForage from "localforage";
+
 let pages = 2500;
 
 var coredump = undefined;
@@ -17,13 +19,24 @@ var theTerminal;
 var editor;
 
 async function load() {
+  if (!code) {
+    code = await localForage.getItem('tex');
+  }
+
+  if (!code) {
+    let tex = await fetch(texBinaryPath);
+    postMessage({text: "."});
+    code = await tex.arrayBuffer();
+  }
+
+  if (!coredump)
+    coredump = await localForage.getItem('coredump');
+  
+  compiled = new WebAssembly.Module(code);
+  postMessage({text: "."});
+
   if (coredump)
     return coredump;
-  
-  let tex = await fetch(texBinaryPath);
-  postMessage({text: "."});
-  
-  code = await tex.arrayBuffer();
   
   let response = await fetchStream(texCorePath);
   const reader = response.body.getReader();
@@ -41,11 +54,9 @@ async function load() {
     reader.releaseLock();
   }
 
-  compiled = new WebAssembly.Module(code);
-  postMessage({text: "."});
-  
   coredump = new Uint8Array( inf.result, 0, pages*65536 );
-
+  localForage.setItem('coredump', coredump);
+  
   return coredump;
 }
 
@@ -66,23 +77,17 @@ async function compile(callback) {
   buffer.set(copy(coredump));
   library.setMemory(memory.buffer);
   library.setTexliveVersion( process.env.TEXLIVE_VERSION );
+  
   postMessage({text: "Copied!\n"});
 
   library.setDirectory('');
   library.setInput(' \\PassOptionsToClass{web}{ximera}\\input{texput}');
-  //library.setInput(' texput.tex');
   
   library.setCallback(() => {
     const filename = 'texput.dvi';
-    //let data = library.readFileSync( filename )
     console.log('Trying to read output...');
     const data = library.readFileSync('texput.dvi');
-    //self.postMessage({ dvi: data }, [data.buffer]);
-    console.log('**** DONE');
-
     const aux = library.readFileSync('texput.aux');
-    console.log('AUX',aux);
-    
     callback( null, data.buffer );
   });
   
@@ -122,10 +127,11 @@ onmessage = async function(e) {
   let url = e.data.url;
   let source = await fetchInput(url);
 
-  let texmf = {};
+  if (e.data.hsize)
+    library.setHsize( e.data.hsize );
+  
   library.deleteEverything();
   library.setTexput(source);
-  library.setTexmfExtra(texmf);
   library.setTexputAux(new Uint8Array());
   
   library.setConsoleWriter((x) => {

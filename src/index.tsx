@@ -52,7 +52,7 @@ window.onresize = function() {
 
 import app from './app';
 
-/* I am using requestAnimationFrame instead
+/* I am using requestAnimationFrame instead */
 function debounce(func, wait) {
   var timeout;
   return function() {
@@ -66,12 +66,12 @@ function debounce(func, wait) {
 };
 
 const repaintSlowly = debounce( repaint, 10 );
-*/
+
 
 function update(newState) {
   state = newState;
-  //repaintSlowly();
-  window.requestAnimationFrame( repaint );
+  repaintSlowly();
+  //window.requestAnimationFrame( repaint );
 }
 
 export function dispatch(message) {
