@@ -50,7 +50,7 @@
     "path-browserify": "^1.0.1",
     "popper.js": "*",
     "prismjs": "^1.23.0",
-    "redis": "^3.0.2",
+    "redis": "^3.1.1",
     "route-parser": "^0.0.5",
     "snabbdom": "^2.1.0",
     "snabbdom-pragma": "^2.8.0",
