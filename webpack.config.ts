@@ -4,9 +4,6 @@ import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import Dotenv from 'dotenv-webpack';
 import webpack from 'webpack';
 
-//import { fileURLToPath } from 'url';
-//const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
 export default {
   plugins: [
     new Dotenv(),
@@ -28,7 +25,7 @@ export default {
     bundle: './src/index.tsx',
   },  
   mode: "development",
-  devtool: 'inline-source-map',
+  devtool: 'eval',
   resolve: {
     fallback: {
       "https": require.resolve("https-browserify"),
@@ -47,8 +44,14 @@ export default {
     rules: [
       {
         test: /\.tsx?$/,
-        use: 'ts-loader',
-        exclude: /node_modules/
+        use: {
+          loader: 'ts-loader',
+          options: {
+            //transpileOnly: true,
+            experimentalWatchApi: true,
+          }
+        },
+        exclude: /node_modules/,
       },      
       {
         test: /\.css$/i,

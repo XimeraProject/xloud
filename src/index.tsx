@@ -11,11 +11,11 @@ console.log("This is\n" +
 "      ███     ██▐██  ██▌ ▐██  ██▌▐█████████ ▄████████▀  ██▀ ▀██\n" + 
 "    ▄██▀██▄   ██▐██  ▐██ ██▌  ██▌██        ▐█▌  ▀██▄   ██▀   ▀██\n" + 
 "  ▄██▀   ▀██▄ ██▐██   ▀███▀   ██▌▀█████████▐█▌    ▀██▄██▀     ▀██\n" +
-"version",version);
+            "version",version);
 
 ////////////////////////////////////////////////////////////////
 // my riff on the elm architecture, via snabbdom
-import { jsx } from "snabbdom";
+import { jsx, VNode } from "snabbdom";
 
 import {
   init,
@@ -27,6 +27,8 @@ import {
   h,
 } from "snabbdom";
 
+import { Message, State, Dispatcher, Component } from './tea';
+
 var patch = init([ // Init patch function with chosen modules
   classModule, // makes it easy to toggle classes
   propsModule, // for setting properties on DOM elements
@@ -35,8 +37,8 @@ var patch = init([ // Init patch function with chosen modules
   eventListenersModule, // attaches event listeners
 ]);
 
-var vnode; // the initial container
-let state;
+var vnode : VNode; // the initial container
+let state : State = {};
 
 function repaint() {
   if (vnode === undefined)
@@ -45,40 +47,45 @@ function repaint() {
     vnode = patch(vnode, app.view({state, dispatch}));
 }
 
+import { NavigationMessage, ResizeMessage } from './message';
+
 window.onpopstate = function() {
-  dispatch( ['navigate-to', window.location.pathname] );
+  dispatch( new NavigationMessage(window.location.pathname) );
 };
 
 window.onresize = function() {
-  dispatch( ['window-resize', window.innerWidth, window.innerHeight] );
+  dispatch( new ResizeMessage(window.innerWidth, window.innerHeight) );
 };
 
 import app from './app';
 
 /* I am using requestAnimationFrame instead */
-function debounce(func, wait) {
-  var timeout;
-  return function() {
-    var later = function() {
-      timeout = null;
+function debounce(func, wait : number) {
+  var timeout : number | undefined;
+  return function(): void {
+    function later() {
+      timeout = undefined;
       func();
-    };
-    clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
+    }
+    window.clearTimeout(timeout);
+    timeout = window.setTimeout(later, wait);
   };
 };
 
 const repaintSlowly = debounce( repaint, 10 );
 
-
-function update(newState) {
+function update(newState : State) {
   state = newState;
   repaintSlowly();
   //window.requestAnimationFrame( repaint );
 }
 
-export function dispatch(message) {
+export function dispatch(message : Message): void {
   update( app.update(message, state, dispatch) );
 }
 
 update( app.init(state, dispatch) );
+
+
+
+

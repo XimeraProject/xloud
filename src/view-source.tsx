@@ -1,21 +1,27 @@
-import { jsx } from "snabbdom";
-import Spinner from './spinner';
+import { jsx, VNode } from "snabbdom";
+import { view as Spinner } from './spinner';
 import Prism from 'prismjs/components/prism-core';
 import 'prismjs/components/prism-latex';
 import 'prismjs/themes/prism.css';
 
-export function update( message, state, dispatch ) {
-  if (message[0] === 'view-source') {
-    if (message[1] === state.loading) {
-      return {...state, loading: false, source: message[2] };
+import { Message, State, Dispatcher, Component } from './tea';
+import { ErrorMessage, ViewSourceMessage } from './message';
+
+export function update( message : Message, state : State, _dispatch : Dispatcher ) : State {
+  if (message.type === 'view-source') {
+    if (message.url === state.loading) {
+      return {...state, loading: undefined, source: message.source };
     }
   }
       
   return state;
 }
 
-export function init( params, state, dispatch ) {
-  let url = `/github/${params.owner}/${params.repo}/${params.filename}.tex`;
+export function init( state : State , dispatch : Dispatcher ) : State {
+  let params = state.routeParams;
+  let rawUrl = new URL(`${params.owner}/${params.repo}/${params.filename}.tex`,
+                     process.env.GITHUB_ROOT);
+  let url = rawUrl.toString();
   
   fetch(url)
     .then((response) => {
@@ -24,9 +30,9 @@ export function init( params, state, dispatch ) {
       }
       return response.text();
     })
-    .then(data => dispatch( ['view-source', url, data] ))
+    .then(data => dispatch( new ViewSourceMessage(url, data) ))
     .catch((error) => {
-      dispatch( ['error', error.toString()] );
+      dispatch( new ErrorMessage(error.toString()) );
     });
 
   return {...state,
@@ -37,7 +43,7 @@ export function init( params, state, dispatch ) {
          };
 }
 
-export function view( {state, dispatch} ) {
+export function view( {state, dispatch} : { state : State, dispatch : Dispatcher } ): VNode {
   if (state.loading)
     return <Spinner state={state} dispatch={dispatch}/>;
 
@@ -53,5 +59,8 @@ export function view( {state, dispatch} ) {
     <p>Could not load code.</p>
     </div>;
 }
-  
-export default { view, init, update };
+
+let ViewSource : Component = { view, init, update };
+export default ViewSource;
+
+

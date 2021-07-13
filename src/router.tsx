@@ -1,51 +1,59 @@
-import { jsx } from "snabbdom";
+import { jsx, VNode } from "snabbdom";
+import { Message, State, Dispatcher, Component, Viewer, emptyInit, emptyUpdate } from './tea';
 import Route from 'route-parser';
 
-//import Home from './home';
 import FourOhFour from './four-oh-four';
 import ViewSource from './view-source';
 import Spinner from './spinner';
 import Page from './page';
 
-function findRoute( pathname, state, dispatch ) {
-  // FIXME: ugh this is such an ugly hack
+import { NavigationMessage } from './message';
+
+function findRoute( pathname : string, state : State, dispatch : Dispatcher ) : State {
+  // FIXME: ugh this is such an ugly hack, and actually seems to fall
+  // in some sort of race condition on the deployed website
   if (pathname === '/') {
     let href = '/XimeraProject/about/overview.tex';
     setTimeout( () => history.replaceState(null, '', href), 100);
-    setTimeout( () => dispatch(['navigate-to', href]), 100);
-    return { ...state, component: {view: Spinner} };
+    setTimeout( () => dispatch(new NavigationMessage(href)), 100);
+    return { ...state, component: Spinner };
   }
   
   let r = new Route('/:owner/:repo/(*filename).tex');
   if (r.match(pathname))
-    return {...ViewSource.init(r.match(pathname), state, dispatch), component: ViewSource };
+    return {...ViewSource.init({...state,
+                                routeParams: r.match(pathname) },
+                               dispatch), component: ViewSource };
 
   r = new Route('/:owner/:repo/(*filename)');
   if (r.match(pathname))
-    return {...Page.init(r.match(pathname), state, dispatch), component: Page };
+    return {...Page.init({...state,
+                          routeParams: r.match(pathname) },
+                         dispatch), component: Page };
 
   // No route found!
   return { ...state, component: FourOhFour };
 }
 
-function ErrorComponent(text) {
-  return { view: function ({state, dispatch}) {
+function ErrorComponent(text : string) : Component {
+  let view : Viewer = function ({state, dispatch}): VNode {
     return  <div class={{"container":true}}>
       <h1>Error 500</h1>
       <p>{ text }</p>
       </div>;
-  }
-         };
+  };
+  
+  return { view, init: emptyInit, update: emptyUpdate }
 }
 
-export function update( message, state, dispatch ) {
-  if (message[0] == 'error') {
-    console.log('error!');
-    return {...state, component: ErrorComponent(message[1]) };
+export function update( message : Message, state : State, dispatch : Dispatcher ) : State {
+  if (message.type === 'error') {
+    return {...state, component: ErrorComponent(message.error) };
   }
   
-  if (message[0] == 'navigate-to') {
-    return findRoute( message[1], {...state, dropdown: false, flashDanger: false}, dispatch );
+  if (message.type === 'navigate-to') {
+    return findRoute( message.path,
+                      {...state, dropdown: false, flashDanger: false}, dispatch );
   }
   
   if (state && state.component) 
@@ -54,7 +62,7 @@ export function update( message, state, dispatch ) {
   return state;
 }
 
-export function init(state, dispatch) {
+export function init(state : State, dispatch : Dispatcher) : State {
   return findRoute( window.location.pathname, state, dispatch );
 }
 
@@ -65,29 +73,14 @@ function DisplayError(text) {
     </div>;
 }
 
-export function view( { state, dispatch } ) {
+export function view( {state, dispatch} : { state : State, dispatch : Dispatcher } ): VNode {
   if (state && state.component) 
     return state.component.view( {state, dispatch} );
   else
     return DisplayError('No route found.');
 }
 
-const stopPropagation = function(ev) { ev.stopPropagation() };
-const preventDefault = function(ev) { ev.preventDefault() };
+let Router : Component = { view, init, update };
 
-function onClick( dispatch, href ) {
-  return function(ev) {
-    ev.preventDefault()
+export default Router;
 
-    dispatch(['navigate-to', href]);
-    history.pushState(null, '', href);
-    
-    ev.stopPropagation();
-  };
-}
-
-export function Link( props, children ) {
-  return <a {...props} on-click={onClick(props.dispatch, props.href)}>{ children }</a>;
-}
-
-export default { view, init, update, Link };
