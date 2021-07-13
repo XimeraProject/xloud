@@ -7,21 +7,28 @@ import 'prismjs/themes/prism.css';
 import { Message, State, Dispatcher, Component } from './tea';
 import { ErrorMessage, ViewSourceMessage } from './message';
 
-export function update( message : Message, state : State, _dispatch : Dispatcher ) : State {
+import { updateRepositoryDetails, requestRepositoryDetails } from './github';
+
+export function update( message : Message, state : State, dispatch : Dispatcher ) : State {
   if (message.type === 'view-source') {
     if (message.url === state.loading) {
       return {...state, loading: undefined, source: message.source };
     }
   }
       
-  return state;
+  return {...state,
+          ...updateRepositoryDetails( message, state, dispatch )};
 }
 
 export function init( state : State , dispatch : Dispatcher ) : State {
   let params = state.routeParams;
+  
   let rawUrl = new URL(`${params.owner}/${params.repo}/${params.filename}.tex`,
-                     process.env.GITHUB_ROOT);
+                       process.env.GITHUB_ROOT);
+  
   let url = rawUrl.toString();
+
+  requestRepositoryDetails( params.owner, params.repo, dispatch );
   
   fetch(url)
     .then((response) => {
