@@ -1,5 +1,6 @@
-{ stdenv, yarn2nix, texlive }:
-yarn2nix.mkYarnPackage rec {
+with import <nixpkgs> {};
+
+mkYarnPackage rec {
     name = "xloud";
     src = ./.;
     packageJSON = ./package.json;
@@ -10,7 +11,7 @@ yarn2nix.mkYarnPackage rec {
       NODE_ENV=production yarn run build
     '';
 
-    meta = with stdenv.lib; {
+    meta = with lib; {
       description = "Interactively view TeX files on GitHub";
       license = licenses.agpl3;
       homepage = "https://github.com/XimeraProject/xloud";

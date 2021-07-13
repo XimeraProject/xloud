@@ -1,4 +1,4 @@
-#!/usr/bin/env -S node --experimental-modules
+#!/usr/bin/env node
 
 import http from 'http';
 import express from 'express';

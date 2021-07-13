@@ -1,4 +1,4 @@
-import Snabbdom from 'snabbdom-pragma';
+import { jsx } from "snabbdom";
 import Navbar from './navbar';
 import Footer from './footer';
 
@@ -10,7 +10,7 @@ export function view( { state, dispatch } ) {
     <header>
     <Navbar state={state} dispatch={dispatch} />
     </header>
-    <main role="main" class={{"flex-shrink-0":true}}>
+    <main attrs={{role: "main"}} class={{"flex-shrink-0":true}}>
     <Router state={state} dispatch={dispatch}/>
     </main>
     <Footer state={state} dispatch={dispatch} />    

@@ -1,4 +1,4 @@
-import Snabbdom from 'snabbdom-pragma';
+import { jsx } from "snabbdom";
 import Route from 'route-parser';
 
 //import Home from './home';

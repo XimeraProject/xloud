@@ -1,7 +1,7 @@
 import { dvi2vdom } from 'dvi2html';
 import './fonts/tex/tex.css';
 
-import { h } from 'snabbdom/h'; // helper function for creating vnodes
+import { h } from 'snabbdom'; // helper function for creating vnodes
 import { Buffer } from 'buffer';
 
 export function render(dvi) {

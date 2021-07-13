@@ -11,10 +11,7 @@
     "resolveJsonModule": true,
     "noImplicitAny": false,
     "jsx": "react",
-    "jsxFactory": "Snabbdom.createElement",
-    "paths": {
-      "snabbdom/*": ["./node_modules/snabbdom/build/package/*"]
-    }
+    "jsxFactory": "jsx"
   },
   "include": ["src",  "src/custom.d.ts"]
 }

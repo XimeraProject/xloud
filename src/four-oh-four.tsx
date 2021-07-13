@@ -1,4 +1,4 @@
-import Snabbdom from 'snabbdom-pragma';
+import { jsx } from "snabbdom";
 
 export function update( message, state, dispatch ) {
   return state;

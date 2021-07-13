@@ -15,14 +15,17 @@ console.log("This is\n" +
 
 ////////////////////////////////////////////////////////////////
 // my riff on the elm architecture, via snabbdom
-import Snabbdom from 'snabbdom-pragma';
+import { jsx } from "snabbdom";
 
-import { init } from 'snabbdom/init';
-import { classModule } from 'snabbdom/modules/class';
-import { propsModule } from 'snabbdom/modules/props';
-import { attributesModule } from 'snabbdom/modules/attributes';
-import { styleModule } from 'snabbdom/modules/style';
-import { eventListenersModule } from 'snabbdom/modules/eventlisteners';
+import {
+  init,
+  classModule,
+  propsModule,
+  styleModule,
+  attributesModule,
+  eventListenersModule,
+  h,
+} from "snabbdom";
 
 var patch = init([ // Init patch function with chosen modules
   classModule, // makes it easy to toggle classes

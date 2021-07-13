@@ -1,5 +1,5 @@
 import './spinner.css';
-import Snabbdom from 'snabbdom-pragma';
+import { jsx } from "snabbdom";
 
 export function view( {state, dispatch} ) {
   return <div class={{spinner:true}}>Loading...</div>;

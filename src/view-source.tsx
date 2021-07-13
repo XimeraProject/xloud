@@ -1,4 +1,4 @@
-import Snabbdom from 'snabbdom-pragma';
+import { jsx } from "snabbdom";
 import Spinner from './spinner';
 import Prism from 'prismjs/components/prism-core';
 import 'prismjs/components/prism-latex';
@@ -45,7 +45,7 @@ export function view( {state, dispatch} ) {
     const html = Prism.highlight(state.source, Prism.languages.latex, 'latex');
 
     return <div class={{container:true}}>    
-      <pre><code innerHTML={html}></code></pre>
+      <pre><code props={{innerHTML: html}}></code></pre>
       </div>;
   }
   

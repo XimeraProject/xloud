@@ -1,14 +1,20 @@
 let
-  awsKeyId = "AKIAI6QCDKDFAZFL5D5A"; # for fowler@rossprogram.org
+  awsKeyId = "AKIAI6QCDKDFAZFL5D5A";
   region = "us-east-2";
   pkgs = import <nixpkgs> {};
+  lib = import <nixpkgs/lib>;
 in
 {
-  network.description = "xloud.rossprogram.org";
+  network.description = "ximera.xloud"; # the mispelling is a bit of a joke
 
   resources.ec2KeyPairs.myKeyPair = {
     accessKeyId = awsKeyId;
     inherit region;
+  };
+
+  resources.elasticIPs.myIP = {
+    inherit region;
+    accessKeyId = awsKeyId;
   };
   
   resources.ec2SecurityGroups.openPorts = { resources, lib, ... }: {
@@ -25,10 +31,7 @@ in
   server = { resources, config, nodes, ... }:
   let
     # build the backend node app
-    app = pkgs.callPackage ./default.nix {
-      yarn2nix = pkgs.yarn2nix-moretea;
-      texlive = pkgs.texlive;
-    };
+    app = import ./default.nix;
   in {
     # Cloud provider settings; here for AWS
     deployment.targetEnv = "ec2";
@@ -36,16 +39,17 @@ in
     deployment.ec2.region = region;
     deployment.ec2.instanceType = "t2.micro"; # a cheap one
     deployment.ec2.ebsInitialRootDiskSize = 20; # GB
+    deployment.ec2.elasticIPv4 = resources.elasticIPs.myIP;
     deployment.ec2.keyPair = resources.ec2KeyPairs.myKeyPair;
     deployment.ec2.associatePublicIpAddress = true;
     deployment.ec2.securityGroups = [ resources.ec2SecurityGroups.openPorts.name ];
 
     environment.systemPackages = with pkgs; [
-      pkgs.mongodb pkgs.nginx pkgs.texlive.combined.scheme-full
+      pkgs.redis pkgs.nginx pkgs.texlive.combined.scheme-full
       app
     ];
     
-    services.mongodb.enable = true;
+    services.redis.enable = true;
 
     services.nginx = {
       enable = true;
@@ -55,23 +59,28 @@ in
       recommendedOptimisation = true;
       recommendedProxySettings = true;
       recommendedTlsSettings = true;
+
+      upstreams."backend" = {
+        servers = {
+          "127.0.0.1:8000" = {};
+        };
+      };
     };
 
-    services.nginx.virtualHosts."xloud.rossprogram.org" = {
+    services.nginx.virtualHosts."ximera.cloud" = {
       forceSSL = true;
       enableACME = true;
       default = true;
-      root = "/var/www/xloud.rossprogram.org";
+      root = "/var/www/ximera.cloud";
       locations = {
-        "/".proxyPass = "http://localhost:${config.systemd.services.node.environment.PORT}/";
-        "/".proxyWebsockets = true;
+        "/".proxyPass = http://backend;
       };
     };
 
     security.acme.acceptTerms = true;
     
     security.acme.certs = {
-      "xloud.rossprogram.org".email = "fowler@rossprogram.org";
+      "ximera.cloud".email = "admin@ximera.cloud";
     };
     
     systemd.services.node = {
@@ -83,18 +92,16 @@ in
       environment = {
         NODE_ENV = "production";
 
-        TEXLIVE_VERSION=(lib.splitString "-" (lib.splitString "/" pkgs.texlive.combined.scheme-full)[2])[0];
+        TEXLIVE_VERSION=lib.head (lib.splitString "-"
+          (lib.elemAt (lib.splitString "/" pkgs.texlive.combined.scheme-full) 3));
         TEXMF = "${pkgs.texlive.combined.scheme-full}/share/texmf";
         PORT = toString 8000;
-
-        MONGODB_DATABASE = "xloud";
-        MONGODB_PORT = toString 27017;
 
         GITHUB_ACCESS_TOKEN=builtins.readFile ./github.key;        
       };
       
       serviceConfig = {
-        ExecStart = "${app}/bin/xloud";
+        ExecStart = "${app}/bin/ximera-xloud";
         User = "node";
         Restart = "always";
       };
@@ -102,7 +109,7 @@ in
 
     # for "security" do not run the node app as root
     users.extraUsers = {
-      node = { };
+      node = { isNormalUser = true; };
     };
     
     networking.firewall.allowedTCPPorts = [ 80 443 ];

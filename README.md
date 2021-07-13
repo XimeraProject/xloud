@@ -10,3 +10,8 @@ https://github.com/mooculus/calculus), there is a file [derivativesOfInverseFunc
 By going to <https://ximera.cloud/mooculus/calculus/derivativesOfInverseFunctions/digInDerivativesOfInverseTrigonometricFunctions>, your browser will download the necessary files, compile the `.tex` file, and render it.
 
 **tl;dr: go to <https://ximera.cloud/username/repository/pathname>**
+
+# How to deploy your own
+
+nixops create ./aws.nix -d xloud
+nixops deploy -d xloud

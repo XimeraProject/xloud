@@ -36,10 +36,7 @@ export default {
       "http": require.resolve("stream-http"),
       "buffer": require.resolve("buffer/")
     },
-    extensions: [ '.tsx', '.ts', '.js' ],
-    alias: {
-      snabbdom: path.resolve(__dirname, 'node_modules', 'snabbdom', 'build', 'package')
-    }    
+    extensions: [ '.tsx', '.ts', '.js' ]
   },
   output: {
     filename: 'main.[chunkhash].js',
