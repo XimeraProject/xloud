@@ -18,6 +18,11 @@ export class SetRepositoryDetailsMessage {
   constructor(public owner : string, public repo : string, public details : any ) {};
 }
 
+export class DoenetDisconnectMessage {
+  type: "doenet-disconnect" = "doenet-disconnect";
+  constructor() {};
+}
+
 export class SetDoenetTokenMessage {
   type: "set-doenet-token" = "set-doenet-token";
   constructor(public token : string ) {};
@@ -33,6 +38,7 @@ export type Message =
   ResizeMessage |
   ViewSourceMessage |
   SetRepositoryDetailsMessage |
+  DoenetDisconnectMessage |
   SetDoenetTokenMessage | 
   ErrorMessage;
 

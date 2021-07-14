@@ -34,7 +34,7 @@ export function view( {state, dispatch} : { state : State, dispatch : Dispatcher
   return <nav class={{navbar:true, "fixed-top":true, "navbar-expand-md":true, "navbar-light":true, "bg-light": true}}>
     <div class={{"container-fluid": true}}>
     <Link class={{"navbar-brand":true}} dispatch={dispatch} href={"/"}><Brand/></Link>
-    <button class={{"navbar-toggler":true}} attrs={{"data-bs-toggle": "collapse", "data-bs-target": "#navbarNav", type: "button", "aria-controls": "navbarNav", "aria-expanded": "false", "aria-label": "Toggle navigation"}}>
+    <button class={{"navbar-toggler":true, "ms-auto": true}} attrs={{"data-bs-toggle": "collapse", "data-bs-target": "#navbarNav", type: "button", "aria-controls": "navbarNav", "aria-expanded": "false", "aria-label": "Toggle navigation"}}>
     <span class={{"navbar-toggler-icon":true}}></span>
     </button>
     <div class={{collapse:true, "navbar-collapse":true}} attrs={{id: "navbarNav"}}>
@@ -43,6 +43,8 @@ export function view( {state, dispatch} : { state : State, dispatch : Dispatcher
     <Link class={{"nav-link":true}} dispatch={dispatch} href={"/help"}>Help</Link>
     </li>
     { buttons }
+    </ul>
+    <ul class={{"navbar-nav":true, "ms-auto":true}}>  
     <Doenet dispatch={dispatch} state={state}/>
     </ul>
     </div>
