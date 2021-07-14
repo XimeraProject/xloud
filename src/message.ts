@@ -18,6 +18,11 @@ export class SetRepositoryDetailsMessage {
   constructor(public owner : string, public repo : string, public details : any ) {};
 }
 
+export class SetDoenetTokenMessage {
+  type: "set-doenet-token" = "set-doenet-token";
+  constructor(public token : string ) {};
+}
+
 export class ErrorMessage {
   type: "error" = "error";
   constructor(public error : string ) {};
@@ -28,6 +33,7 @@ export type Message =
   ResizeMessage |
   ViewSourceMessage |
   SetRepositoryDetailsMessage |
+  SetDoenetTokenMessage | 
   ErrorMessage;
 
 

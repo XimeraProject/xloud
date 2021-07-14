@@ -33,14 +33,14 @@
     "worker-loader": "^3.0.8"
   },
   "dependencies": {
-    "@doenet/cloud": "^1.0.1",
+    "@doenet/cloud": "^1.0.2",
     "@fortawesome/fontawesome-svg-core": "^1.2.35",
     "@fortawesome/free-solid-svg-icons": "^5.15.3",
     "@octokit/rest": "^18.6.7",
+    "@popperjs/core": "^2.9.2",
     "@teamwork/websocket-json-stream": "^2.0.0",
     "@ximeraproject/kpathsea": "^1.0.2",
     "bootstrap": "^5.0.2",
-    "bootstrap.native": "^4.0.3",
     "buffer": "^6.0.3",
     "dotenv": "^8.6.0",
     "dvi2html": "0.0.6",

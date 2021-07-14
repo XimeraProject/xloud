@@ -2,6 +2,8 @@
 // Load our CSS
 import './base.css';
 
+import 'bootstrap'; // include the bootstrap javascript
+
 ////////////////////////////////////////////////////////////////
 // Display a banner
 import { version } from '../package.json';
@@ -32,7 +34,7 @@ import { Message, State, Dispatcher, Component } from './tea';
 var patch = init([ // Init patch function with chosen modules
   classModule, // makes it easy to toggle classes
   propsModule, // for setting properties on DOM elements
-  attributesModule, // for setting attributes on DOM elements  
+  attributesModule, // for setting attributes on DOM elements
   styleModule, // handles styling on elements with support for animations
   eventListenersModule, // attaches event listeners
 ]);

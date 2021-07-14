@@ -14,6 +14,8 @@ export default interface State {
   flashDanger?: boolean;
 
   routeParams?: ReturnType<Route.match>;
+
+  doenetToken?: string;
   
   component?: Component;
 }

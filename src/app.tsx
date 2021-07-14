@@ -22,7 +22,9 @@ export function view( {state, dispatch} : { state : State, dispatch : Dispatcher
 }
 
 export function update( message : Message, state : State, dispatch ) {
-  return router.update( message, state, dispatch );
+  return router.update( message,
+                        navbar.update( message, state, dispatch ),
+                        dispatch );
 }
 
 export function init(state, dispatch) {
