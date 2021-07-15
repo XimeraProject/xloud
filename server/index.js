@@ -29,6 +29,7 @@ app.get('/', function (request, response) {
 });
 
 app.use(express.static(path.resolve(__dirname, '../dist'), optionsStatic ));
+
 app.use(`/${process.env.TEXLIVE_VERSION}/texmf`,
 	express.static(process.env.TEXMF, optionsStatic) );
 

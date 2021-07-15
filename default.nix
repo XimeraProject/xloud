@@ -8,7 +8,7 @@ mkYarnPackage rec {
     yarnNix = ./yarn.nix;
     postBuild = ''
       yarn run lsr2json ${texlive.combined.scheme-full}/share/texmf/ls-R src/lsr.json
-      NODE_ENV=production yarn run build
+      GITHUB_ROOT=https://ximera.cloud/github/ NODE_ENV=production yarn run build
     '';
 
     meta = with lib; {

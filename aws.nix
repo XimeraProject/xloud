@@ -32,6 +32,9 @@ in
   let
     # build the backend node app
     app = import ./default.nix;
+    texliveVersion=lib.head (lib.splitString "-" (lib.elemAt (lib.splitString "/"
+      (builtins.unsafeDiscardStringContext pkgs.texlive.combined.scheme-full)) 3));
+    texmfRoot= "${pkgs.texlive.combined.scheme-full}/share/texmf";    
   in {
     # Cloud provider settings; here for AWS
     deployment.targetEnv = "ec2";
@@ -71,9 +74,18 @@ in
       forceSSL = true;
       enableACME = true;
       default = true;
-      root = "/var/www/ximera.cloud";
+      root = "${app}/libexec/@ximera/xloud/deps/@ximera/xloud/dist";
       locations = {
-        "/".proxyPass = http://backend;
+        "${texliveVersion}" = {
+          root = texmfRoot;
+        };
+        "=/favicon.ico" = {
+          root = "${app}/libexec/@ximera/xloud/deps/@ximera/xloud/public/favicon";          
+        };
+        "/" = {
+          tryFiles = "$uri @proxy";
+        };
+        "@proxy".proxyPass = http://backend;
       };
     };
 
@@ -92,12 +104,12 @@ in
       environment = {
         NODE_ENV = "production";
 
-        TEXLIVE_VERSION=lib.head (lib.splitString "-"
-          (lib.elemAt (lib.splitString "/" pkgs.texlive.combined.scheme-full) 3));
-        TEXMF = "${pkgs.texlive.combined.scheme-full}/share/texmf";
+        TEXLIVE_VERSION=texliveVersion;
+        TEXMF = texmfRoot;
         PORT = toString 8000;
 
-        GITHUB_ACCESS_TOKEN=builtins.readFile ./github.key;        
+        GITHUB_ACCESS_TOKEN=builtins.readFile ./github.key;
+        GITHUB_ROOT="https://ximera.cloud/github/";
       };
       
       serviceConfig = {

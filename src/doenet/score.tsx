@@ -81,7 +81,7 @@ export function init( state : State, dispatch : Dispatcher ) : State {
 
 export function view( {state, dispatch} : { state : State, dispatch : Dispatcher } ): VNode {
   if (state.score !== undefined) {
-    return <div style={{width:"1in"}} class={{progress:true, "mr-1": true, "mt-auto": true, "mb-auto": true}}
+    return <div style={{width:"1in"}} class={{progress:true, "mr-1": true, "ms-2": true, "mt-auto": true, "mb-auto": true}}
     attrs={{"data-toggle":"tooltip", "data-placement": "bottom", title: `${Math.floor(state.score * 100.0)}%`}}>
           <div style={{"width": `${state.score * 100.0}%`}} class={{"progress-bar":true, "bg-success":true}}
     attrs={{role: "progressbar", "aria-valuenow": `${Math.floor(state.score * 100.0)}`, "aria-valuemin": "0", "aria-valuemax": "100"}}></div>
