@@ -16,7 +16,13 @@ function findRoute( pathname : string, state : State, dispatch : Dispatcher ) : 
     let href = '/XimeraProject/about/overview.tex';
     setTimeout( () => history.replaceState(null, '', href), 100);
     setTimeout( () => dispatch(new NavigationMessage(href)), 100);
-    return { ...state, component: Spinner };
+    return { ...state,
+             component: Spinner,
+             owner: undefined,
+             repo: undefined,
+             texFilename: undefined,
+             score: undefined
+           };
   }
   
   let r = new Route('/:owner/:repo/(*filename).tex');
@@ -32,7 +38,13 @@ function findRoute( pathname : string, state : State, dispatch : Dispatcher ) : 
                          dispatch), component: Page };
 
   // No route found!
-  return { ...state, component: FourOhFour };
+  return { ...state,
+           component: FourOhFour,
+           owner: undefined,
+           repo: undefined,
+           texFilename: undefined,
+           score: undefined           
+         };
 }
 
 function ErrorComponent(text : string) : Component {

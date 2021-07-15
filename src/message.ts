@@ -28,6 +28,11 @@ export class SetDoenetTokenMessage {
   constructor(public token : string ) {};
 }
 
+export class SetDoenetScoreMessage {
+  type: "set-doenet-score" = "set-doenet-score";
+  constructor(public score : number, public pathname : string ) {};
+}
+
 export class ErrorMessage {
   type: "error" = "error";
   constructor(public error : string ) {};
@@ -39,7 +44,8 @@ export type Message =
   ViewSourceMessage |
   SetRepositoryDetailsMessage |
   DoenetDisconnectMessage |
-  SetDoenetTokenMessage | 
+  SetDoenetTokenMessage |
+  SetDoenetScoreMessage |
   ErrorMessage;
 
 

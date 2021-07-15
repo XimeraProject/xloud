@@ -4,10 +4,14 @@ import Route from 'route-parser';
 export default interface State {
   owner?: string;
   repo?: string;
+  texFilename?: string;
+  
   branch?: string;
   loading?: string;
-  source?: string;  
-  texFilename?: string;
+  source?: string;
+
+  title?: string;    
+
   terminal?: string;
 
   dropdown?: boolean;
@@ -16,6 +20,8 @@ export default interface State {
   routeParams?: ReturnType<Route.match>;
 
   doenetToken?: string;
+
+  score?: number;
   
   component?: Component;
 }

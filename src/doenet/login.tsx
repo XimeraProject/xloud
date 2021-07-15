@@ -1,10 +1,10 @@
 import { jsx, VNode } from "snabbdom";
-import { Message, State, Dispatcher, Component } from './tea';
-import Icon from './icon';
+import { Message, State, Dispatcher, Component } from '../tea';
+import Icon from '../icon';
 
-import { SetDoenetTokenMessage, DoenetDisconnectMessage } from './message';
+import { SetDoenetTokenMessage, DoenetDisconnectMessage } from '../message';
 import { login, logout, getAccessToken } from "@doenet/cloud";
-import { withDefaultPrevented } from './helpers';
+import { withDefaultPrevented } from '../helpers';
 
 // FIXME: fetch ?error=access_denied and set a flash message
 
@@ -14,7 +14,8 @@ export function update( message : Message, state : State, _dispatch : Dispatcher
   }
 
   if (message.type ===  "doenet-disconnect") {
-    return {...state, doenetToken: undefined };
+    logout();
+    return {...state, score: undefined, doenetToken: undefined };
   }
   
   return state;
