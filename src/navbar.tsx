@@ -12,28 +12,39 @@ import { view as GetHelp } from './get-help';
 import { DoenetScore as doenetScore } from './doenet/score';
 const DoenetScore = doenetScore.view;
 
+import { DoenetDatabase as doenetDatabase } from './doenet/db';
+const DoenetDatabase = doenetDatabase.view;
+
 import Brand from './brand';
 
 export function init( state : State, dispatch : Dispatcher ) : State {
   return {...state,
           ...doenetLogin.init( state, dispatch ),
-          ...doenetScore.init( state, dispatch )
+          ...doenetScore.init( state, dispatch ),
+          ...doenetDatabase.init( state, dispatch )          
          };
 }
 
 export function update( message : Message, state : State, dispatch : Dispatcher ) : State {
   return doenetLogin.update( message,
-                             doenetScore.update( message, state, dispatch ),
+                             doenetDatabase.update( message,
+                                                    doenetScore.update( message, state, dispatch ),
+                                                    dispatch ),
                              dispatch );
 }
+
+function ResponsiveHide( { long } ): VNode {
+  return <span><span class={{"d-none":true, "d-lg-inline":true}}>&nbsp; { long }</span></span>;
+}
+
 
 export function view( {state, dispatch} : { state : State, dispatch : Dispatcher } ): VNode {
   let buttons : VNode[] = [];
 
   if (state.owner && state.repo && state.branch) {
     let editHref = `https://github.com/${state.owner}/${state.repo}/edit/${state.branch}/${state.texFilename}`;
-    let b = <li class={{"nav-item":true}}>
-        <a class={{"btn": true, "btn-outline-secondary": true, "nav-link":true}} attrs={{href:editHref}}><Icon fa="pencil-alt"/>&nbsp;Edit</a>
+    let b = <li class={{"nav-item":true, "me-1": true, "mb-auto": true, "mt-auto": true}}>
+        <a class={{"btn": true, "btn-outline-secondary": true}} attrs={{href:editHref}} title="Edit on GitHub"><Icon fa="pencil-alt"/>&nbsp;<ResponsiveHide long={"Edit"}/></a>
         </li>;
     buttons.push(b);
   }
@@ -49,14 +60,13 @@ export function view( {state, dispatch} : { state : State, dispatch : Dispatcher
     <li class={{"nav-item":true}}>
     <GetHelp dispatch={dispatch} state={state}/>
     </li>
-  </ul>
-    <div class={{"ms-auto":true, "navbar-nav":true}}>
-    { buttons }    
+    </ul>
+    <ul class={{"ms-auto":true, "navbar-nav":true}}>      
+    <DoenetDatabase dispatch={dispatch} state={state} />
+    { buttons }
     <DoenetScore dispatch={dispatch} state={state}/>      
-    <ul class={{"navbar-nav":true}}>
     <DoenetLogin dispatch={dispatch} state={state}/>
     </ul>
-    </div>
     </div>
     </div>
     </nav>;

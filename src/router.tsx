@@ -21,7 +21,6 @@ function findRoute( pathname : string, state : State, dispatch : Dispatcher ) : 
              owner: undefined,
              repo: undefined,
              texFilename: undefined,
-             score: undefined
            };
   }
   
@@ -43,7 +42,6 @@ function findRoute( pathname : string, state : State, dispatch : Dispatcher ) : 
            owner: undefined,
            repo: undefined,
            texFilename: undefined,
-           score: undefined           
          };
 }
 

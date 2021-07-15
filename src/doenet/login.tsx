@@ -15,7 +15,7 @@ export function update( message : Message, state : State, _dispatch : Dispatcher
 
   if (message.type ===  "doenet-disconnect") {
     logout();
-    return {...state, score: undefined, doenetToken: undefined };
+    return {...state, doenetToken: undefined };
   }
   
   return state;
@@ -34,7 +34,7 @@ export function init( state : State, dispatch : Dispatcher ) : State {
 
 export function view( {state, dispatch} : { state : State, dispatch : Dispatcher } ): VNode {
   if (state.doenetToken) {
-    return <li class={{"nav-item":true, "dropdown":true}}>
+    return <li class={{"dropdown":true}}>
       <a class={{"nav-link":true, "dropdown-toggle":true}} attrs={{href: "#", id:"doenetDropdown", role: "button", "data-bs-toggle": "dropdown",  "aria-expanded": "false"}}>
       <Icon fa="user"/>&nbsp;Gradebook</a>
       <ul class={{"dropdown-menu":true}} attrs={{"aria-labelledby": "doenetDropdown"}}>
@@ -45,8 +45,8 @@ export function view( {state, dispatch} : { state : State, dispatch : Dispatcher
       </li>;
   }
 
-  return <li class={{"nav-item":true}}>
-    <a class={{"btn": true, "btn-outline-secondary": true, "nav-link":true}} on={{click: withDefaultPrevented(() => login())}}>Log In</a>
+  return <li class={{"nav-item":true, "mb-auto": true, "mt-auto": true}}>
+    <a class={{"btn": true, "btn-primary": true}} on={{click: withDefaultPrevented(() => login())}}>Log In</a>
         </li>;
 }
 

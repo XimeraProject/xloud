@@ -33,6 +33,21 @@ export class SetDoenetScoreMessage {
   constructor(public score : number, public pathname : string ) {};
 }
 
+export class SetDoenetDatabaseMessage {
+  type: "set-doenet-database" = "set-doenet-database";
+  constructor(public db : any, public pathname : string ) {};
+}
+
+export class SetDoenetShadowMessage {
+  type: "set-doenet-shadow" = "set-doenet-shadow";
+  constructor(public db : any, public pathname : string ) {};
+}
+
+export class DoenetSavingMessage {
+  type: "doenet-saving" = "doenet-saving";
+  constructor(public pathname : string ) {};
+}
+
 export class ErrorMessage {
   type: "error" = "error";
   constructor(public error : string ) {};
@@ -46,6 +61,9 @@ export type Message =
   DoenetDisconnectMessage |
   SetDoenetTokenMessage |
   SetDoenetScoreMessage |
+  SetDoenetDatabaseMessage |
+  SetDoenetShadowMessage |
+  DoenetSavingMessage |  
   ErrorMessage;
 
 

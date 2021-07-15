@@ -4,14 +4,7 @@ import Icon from '../icon';
 
 import { SetDoenetScoreMessage, DoenetDisconnectMessage } from '../message';
 import { getScore as getDoenetScore, putScore as putDoenetScore } from "@doenet/cloud";
-import { withDefaultPrevented } from '../helpers';
-
-function stateToPathname( state : State ) : string {
-  if (state.owner && state.repo && state.texFilename)
-    return `/${state.owner}/${state.repo}/${state.texFilename}`;
-
-  return '';
-}
+import { stateToPathname } from '../state';
 
 export async function putScore( state : State, dispatch : Dispatcher, score : number ) {
   if (!state.doenetToken) {
@@ -68,7 +61,13 @@ export function update( message : Message, state : State, dispatch : Dispatcher 
   
   if (message.type === 'set-doenet-score') {
     if (message.pathname === stateToPathname(state)) {
-      return {...state, score: message.score };
+      let result = {...state};
+      if (result.scores === undefined)
+        result.scores = new Map();
+
+      result.scores.set(message.pathname, message.score);
+      
+      return result;
     }
   }
   
@@ -80,12 +79,21 @@ export function init( state : State, dispatch : Dispatcher ) : State {
 }
 
 export function view( {state, dispatch} : { state : State, dispatch : Dispatcher } ): VNode {
-  if (state.score !== undefined) {
-    return <div style={{width:"1in"}} class={{progress:true, "mr-1": true, "ms-2": true, "mt-auto": true, "mb-auto": true}}
-    attrs={{"data-toggle":"tooltip", "data-placement": "bottom", title: `${Math.floor(state.score * 100.0)}%`}}>
-          <div style={{"width": `${state.score * 100.0}%`}} class={{"progress-bar":true, "bg-success":true}}
-    attrs={{role: "progressbar", "aria-valuenow": `${Math.floor(state.score * 100.0)}`, "aria-valuemin": "0", "aria-valuemax": "100"}}></div>
-          </div>;
+  if (state.owner && state.repo && state.texFilename && state.scores && state.doenetToken)  {
+    if (state.scores) {
+      let pathname = stateToPathname(state);
+      
+      if (state.scores.has(pathname)) {
+        let score = state.scores.get(pathname);
+        if (score !== undefined) {
+          return <div style={{width:"1in"}} class={{progress:true, "mr-1": true, "ms-2": true, "mt-auto": true, "mb-auto": true}}
+          attrs={{"data-toggle":"tooltip", "data-placement": "bottom", title: `${Math.floor(score * 100.0)}%`}}>
+            <div style={{"width": `${score * 100.0}%`}} class={{"progress-bar":true, "bg-success":true}}
+          attrs={{role: "progressbar", "aria-valuenow": `${Math.floor(score * 100.0)}`, "aria-valuemin": "0", "aria-valuemax": "100"}}></div>
+            </div>;
+        }
+      }
+    }
   }
 
   return <div></div>;
