@@ -22,11 +22,7 @@ export function update( message : Message, state : State, dispatch : Dispatcher 
 
 export function init( state : State , dispatch : Dispatcher ) : State {
   let params = state.routeParams;
-  
-  let rawUrl = new URL(`${params.owner}/${params.repo}/${params.filename}.tex`,
-                       process.env.GITHUB_ROOT);
-  
-  let url = rawUrl.toString();
+  let url = `/github/${params.owner}/${params.repo}/${params.filename}.tex`;
 
   requestRepositoryDetails( params.owner, params.repo, dispatch );
   

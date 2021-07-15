@@ -109,7 +109,6 @@ in
         PORT = toString 8000;
 
         GITHUB_ACCESS_TOKEN=builtins.readFile ./github.key;
-        GITHUB_ROOT="https://ximera.cloud/github/";
       };
       
       serviceConfig = {

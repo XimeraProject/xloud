@@ -15,8 +15,7 @@ export function updateRepositoryDetails(message: Message, state: State, _dispatc
 }
 
 export function requestRepositoryDetails(owner : string, repo : string, dispatch : Dispatcher) : void {
-  let rawUrl = new URL(`${owner}/${repo}.json`, process.env.GITHUB_ROOT);
-  let url = rawUrl.toString();
+  let url = `/github/${owner}/${repo}.json`;
 
   fetch(url)
     .then((response) => {
