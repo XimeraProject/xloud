@@ -1,10 +1,13 @@
+import { Configuration } from "webpack";
+
 import path from 'path';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import Dotenv from 'dotenv-webpack';
 import webpack from 'webpack';
+import CssMinimizerPlugin from "css-minimizer-webpack-plugin";
 
-export default {
+const config : Configuration = {
   plugins: [
     new Dotenv(),
     new HtmlWebpackPlugin({title: "Ximera",
@@ -24,8 +27,6 @@ export default {
   entry: {
     bundle: './src/index.tsx',
   },  
-  mode: "development",
-  devtool: 'eval',
   resolve: {
     fallback: {
       "https": require.resolve("https-browserify"),
@@ -104,4 +105,13 @@ export default {
       }
     ],
   },
+  optimization: {
+    minimizer: [
+      new CssMinimizerPlugin(),
+    ],
+  },
 };
+
+export default config;
+
+
