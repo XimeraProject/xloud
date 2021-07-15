@@ -5,15 +5,19 @@ import './base.css';
 import 'bootstrap'; // include the bootstrap javascript
 
 ////////////////////////////////////////////////////////////////
-// Display a banner
+//
+//  ▀██▄   ▄██▀ ██ █████     █████ ▄███████████████████▄    ███
+//    ▀██▄██▀   ██▐██ ▐██   ██▌ ██▌██                 ██▌  ██▀██
+//      ███     ██▐██  ██▌ ▐██  ██▌▐█████████ ▄████████▀  ██▀ ▀██
+//    ▄██▀██▄   ██▐██  ▐██ ██▌  ██▌██        ▐█▌  ▀██▄   ██▀   ▀██
+//  ▄██▀   ▀██▄ ██▐██   ▀███▀   ██▌▀█████████▐█▌    ▀██▄██▀     ▀██
+//
 import { version } from '../package.json';
-console.log("This is\n" +
-"  ▀██▄   ▄██▀ ██ █████     █████ ▄███████████████████▄    ███\n" + 
-"    ▀██▄██▀   ██▐██ ▐██   ██▌ ██▌██                 ██▌  ██▀██\n" + 
-"      ███     ██▐██  ██▌ ▐██  ██▌▐█████████ ▄████████▀  ██▀ ▀██\n" + 
-"    ▄██▀██▄   ██▐██  ▐██ ██▌  ██▌██        ▐█▌  ▀██▄   ██▀   ▀██\n" + 
-"  ▄██▀   ▀██▄ ██▐██   ▀███▀   ██▌▀█████████▐█▌    ▀██▄██▀     ▀██\n" +
-            "version",version);
+import logo from '../public/logo/logo.svg';
+const cleanedLogo = logo.replace('data:image/svg+xml,',"");
+console.log('This is\n%c ',
+            `background-image: url("data:image/svg+xml;utf8,${cleanedLogo}"); background-size: 256px 42px; line-height: 0px; padding: 21px 128px; background-position: center; background-repeat: no; margin: 0; font-size: 0px;`);
+console.log(`version ${version}`);
 
 ////////////////////////////////////////////////////////////////
 // my riff on the elm architecture, via snabbdom
