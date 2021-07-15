@@ -32,9 +32,34 @@ in
   let
     # build the backend node app
     app = import ./default.nix;
+    
     texliveVersion=lib.head (lib.splitString "-" (lib.elemAt (lib.splitString "/"
       (builtins.unsafeDiscardStringContext pkgs.texlive.combined.scheme-full)) 3));
-    texmfRoot= "${pkgs.texlive.combined.scheme-full}/share/texmf";    
+    
+    texmfRoot= "${pkgs.texlive.combined.scheme-full}/share/texmf";
+
+    backendService = index: {
+      description = "backend-${toString index} service";
+      
+      after = [ "network.target" ];
+      wantedBy = [ "default.target" ];
+      
+      environment = {
+        NODE_ENV = "production";
+
+        TEXLIVE_VERSION=texliveVersion;
+        TEXMF = texmfRoot;
+        PORT = toString (8000 + index);
+
+        GITHUB_ACCESS_TOKEN=builtins.readFile ./github.key;
+      };
+      
+      serviceConfig = {
+        ExecStart = "${app}/bin/ximera-xloud";
+        User = "node";
+        Restart = "always";
+      };
+    };
   in {
     # Cloud provider settings; here for AWS
     deployment.targetEnv = "ec2";
@@ -65,7 +90,10 @@ in
 
       upstreams."backend" = {
         servers = {
-          "127.0.0.1:8000" = {};
+          "127.0.0.1:8001" = {};
+          "127.0.0.1:8002" = {};
+          "127.0.0.1:8003" = {};
+          "127.0.0.1:8004" = {};
         };
       };
     };
@@ -95,28 +123,10 @@ in
       "ximera.cloud".email = "admin@ximera.cloud";
     };
     
-    systemd.services.node = {
-      description = "node service";
-      
-      after = [ "network.target" ];
-      wantedBy = [ "default.target" ];
-      
-      environment = {
-        NODE_ENV = "production";
-
-        TEXLIVE_VERSION=texliveVersion;
-        TEXMF = texmfRoot;
-        PORT = toString 8000;
-
-        GITHUB_ACCESS_TOKEN=builtins.readFile ./github.key;
-      };
-      
-      serviceConfig = {
-        ExecStart = "${app}/bin/ximera-xloud";
-        User = "node";
-        Restart = "always";
-      };
-    };
+    systemd.services.backend1 = backendService 1;
+    systemd.services.backend2 = backendService 2;
+    systemd.services.backend3 = backendService 3;
+    systemd.services.backend4 = backendService 4;    
 
     # for "security" do not run the node app as root
     users.extraUsers = {
