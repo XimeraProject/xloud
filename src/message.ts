@@ -13,6 +13,11 @@ export class ViewSourceMessage {
   constructor(public url : string, public source : string ) {};
 }
 
+export class TerminalLogMessage {
+  type: "terminal-log" = "terminal-log";
+  constructor(public text : string) {};
+}
+
 export class SetRepositoryDetailsMessage {
   type: "set-repository-details" = "set-repository-details";
   constructor(public owner : string, public repo : string, public details : any ) {};
@@ -57,6 +62,7 @@ export type Message =
   NavigationMessage |
   ResizeMessage |
   ViewSourceMessage |
+  TerminalLogMessage |  
   SetRepositoryDetailsMessage |
   DoenetDisconnectMessage |
   SetDoenetTokenMessage |

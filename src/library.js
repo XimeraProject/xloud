@@ -30,6 +30,13 @@ export function setTexliveVersion(v) {
 }
 
 export async function download(url) {
+  const request = new Request(url);  
+  const response = await fetch(request);
+  const buffer = response.arrayBuffer();
+  return buffer;
+}
+
+export async function download2(url) {
   try {
     let cache = await self.caches.open(texliveVersion);
     const request = new Request(url);
@@ -106,7 +113,8 @@ let texmf = {};
 let sleeping = false;
 function openSync(filename, mode) {
   console.log('attempting to open', filename, 'in mode', mode);
-
+  console.log(files);
+  
   // FIXME: this seems like a bug with TeXlive?
   if (filename.startsWith('"')) {
     filename = filename.replace(/"/g, '');

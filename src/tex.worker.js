@@ -1,6 +1,6 @@
-import texCorePath from '../tex/core.dfdb85e110a7.dump.gz';
-import texBinaryPath from '../tex/out.f9c8838f85a0.wasm';
 
+import texCorePath from '../tex/core.565e78b2c4ab.dump.gz';
+import texBinaryPath from '../tex/out.f9c8838f85a0.wasm';
 import * as library from './library.js';
 
 import pako from 'pako';
@@ -76,6 +76,7 @@ async function compile(callback) {
   const buffer = new Uint8Array(memory.buffer, 0, pages * 65536);
   buffer.set(copy(coredump));
   library.setMemory(memory.buffer);
+  console.log( 'TEXLIVE', process.env.TEXLIVE_VERSION );
   library.setTexliveVersion( process.env.TEXLIVE_VERSION );
   
   postMessage({text: "Copied!\n"});
