@@ -44,7 +44,7 @@ export function view( {state, dispatch} : { state : State, dispatch : Dispatcher
   if (state.owner && state.repo && state.branch) {
     let editHref = `https://github.com/${state.owner}/${state.repo}/edit/${state.branch}/${state.texFilename}`;
     let b = <li class={{"nav-item":true, "me-1": true, "mb-auto": true, "mt-auto": true}}>
-        <a class={{"btn": true, "btn-outline-secondary": true}} attrs={{href:editHref}} title="Edit on GitHub"><Icon fa="pencil-alt"/>&nbsp;<ResponsiveHide long={"Edit"}/></a>
+        <a class={{"btn": true, "btn-outline-secondary": true}} attrs={{href:editHref}} title="Edit on GitHub"><Icon fa="pencil-alt"/><ResponsiveHide long={"Edit"}/></a>
         </li>;
     buttons.push(b);
   }

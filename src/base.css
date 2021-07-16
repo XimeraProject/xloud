@@ -1,5 +1,6 @@
 @import '~bootstrap/dist/css/bootstrap.min.css';
 @import 'fonts/tex/tex.css';
+@import './pulse.css';
 
 body {
     margin: 0;
