@@ -5,9 +5,10 @@ export default interface State {
   owner?: string;
   repo?: string;
   texFilename?: string;
+  viewingSource?: boolean;
   
   branch?: string;
-  loading?: string;
+  loading?: string | boolean;
   source?: string;
 
   title?: string;    
@@ -26,7 +27,8 @@ export default interface State {
   databases?: Map<string, any>;
   shadows?: Map<string, any>;
   saving?: Map<string, boolean>;
-  
+  dvi?: Map<string, Buffer>;
+
   component?: Component;
 }
 

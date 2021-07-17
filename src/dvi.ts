@@ -22,7 +22,7 @@ export function render(dvi) {
   };
 
   let buffer = new Buffer(dvi);
-  
+
   let result = dvi2vdom(buffer, h,
 	   (vdom) => {
 	     vdoms.push(vdom);

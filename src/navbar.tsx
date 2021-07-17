@@ -49,6 +49,28 @@ export function view( {state, dispatch} : { state : State, dispatch : Dispatcher
     buttons.push(b);
   }
 
+  if (state.owner && state.repo && state.texFilename && (state.viewingSource === true)) {
+    let viewDvi = `/${state.owner}/${state.repo}/${state.texFilename.replace(/.tex$/,'')}`;
+    let b = <li class={{"nav-item":true, "me-1": true, "mb-auto": true, "mt-auto": true}}>
+        <Link class={{"btn": true, "btn-outline-secondary": true}} dispatch={dispatch} href={viewDvi}><Icon fa="book-reader"/><ResponsiveHide long={"Rendered"}/></Link>
+        </li>;
+    buttons.push(b);
+  }
+  
+  
+  if (state.owner && state.repo && state.texFilename && (state.viewingSource === false)) {
+    let viewSource = `/${state.owner}/${state.repo}/${state.texFilename}`;
+    let b = <li class={{"nav-item":true, "me-1": true, "mb-auto": true, "mt-auto": true}}>
+        <Link class={{"btn": true, "btn-outline-secondary": true}} dispatch={dispatch} href={viewSource}><Icon fa="code"/><ResponsiveHide long={"Source"}/></Link>
+        </li>;
+    buttons.push(b);
+  }
+
+  if (state.viewingSource === false) {
+    buttons.unshift( <DoenetDatabase dispatch={dispatch} state={state} /> );
+    buttons.push( <DoenetScore dispatch={dispatch} state={state}/> );
+  }
+
   return <nav class={{navbar:true, "fixed-top":true, "navbar-expand-md":true, "navbar-light":true, "bg-light": true}}>
     <div class={{"container-fluid": true}}>
     <Link class={{"navbar-brand":true}} dispatch={dispatch} href={"/"}><Brand/></Link>
@@ -62,9 +84,7 @@ export function view( {state, dispatch} : { state : State, dispatch : Dispatcher
     </li>
     </ul>
     <ul class={{"ms-auto":true, "navbar-nav":true}}>      
-    <DoenetDatabase dispatch={dispatch} state={state} />
     { buttons }
-    <DoenetScore dispatch={dispatch} state={state}/>      
     <DoenetLogin dispatch={dispatch} state={state}/>
     </ul>
     </div>

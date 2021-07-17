@@ -81,7 +81,7 @@ function debounce(func, wait : number) {
 const repaintSlowly = debounce( repaint, 10 );
 
 function update(newState : State) {
-  state = newState;
+  state = {...newState};
   repaintSlowly();
   //window.requestAnimationFrame( repaint );
 }

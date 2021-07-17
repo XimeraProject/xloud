@@ -3,6 +3,11 @@ export class NavigationMessage {
   constructor(public path : string) {};
 }
 
+export class SetDviMessage {
+  type: "set-dvi" = "set-dvi";
+  constructor(public dvi : Buffer, public pathname : string ) {};  
+}
+
 export class ResizeMessage {
   type: "window-resize" = "window-resize";
   constructor(public width : number, public height : number ) {};
@@ -60,6 +65,7 @@ export class ErrorMessage {
 
 export type Message =
   NavigationMessage |
+  SetDviMessage |
   ResizeMessage |
   ViewSourceMessage |
   TerminalLogMessage |  

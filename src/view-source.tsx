@@ -42,7 +42,8 @@ export function init( state : State , dispatch : Dispatcher ) : State {
           owner: params.owner,
           repo: params.repo,
           texFilename: `${params.filename}.tex`,
-          loading: url
+          loading: url,
+          viewingSource: true,
          };
 }
 

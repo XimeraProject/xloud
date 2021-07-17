@@ -113,7 +113,6 @@ let texmf = {};
 let sleeping = false;
 function openSync(filename, mode) {
   console.log('attempting to open', filename, 'in mode', mode);
-  console.log(files);
   
   // FIXME: this seems like a bug with TeXlive?
   if (filename.startsWith('"')) {
