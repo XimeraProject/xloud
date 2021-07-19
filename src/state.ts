@@ -8,6 +8,8 @@ export default interface State {
   viewingSource?: boolean;
   
   branch?: string;
+  details?: any;
+  
   loading?: string | boolean;
   source?: string;
 

@@ -23,8 +23,16 @@ export async function findRepository(req, res, next) {
         });
 
         if (repo.data) {
-          client.setex( key, 300, JSON.stringify(repo.data) );
-          req.repository = repo.data;
+          let branch = await octokit.rest.repos.getBranch({
+            owner: req.params.owner,
+            repo: req.params.repo,
+            branch: repo.data.default_branch
+          });
+
+          let result = {...repo.data,
+                        branch: branch.data};
+          client.setex( key, 300, JSON.stringify(result) );
+          req.repository = result;
         }
       } catch (e) {
         // ignore the fact that we can't get the repo, but don't check again for a little while

@@ -6,7 +6,8 @@ export function updateRepositoryDetails(message: Message, state: State, _dispatc
     let details = message.details;
     if (details.full_name === `${state.owner}/${state.repo}`) {
       return {...state,
-              branch: details.default_branch as string
+              branch: details.default_branch as string,
+              details: details
              };
     }
   }

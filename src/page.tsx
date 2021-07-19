@@ -11,6 +11,8 @@ import { TerminalLogMessage, SetDviMessage } from './message';
 
 import { stateToPathname } from './state';
 
+import { updateRepositoryDetails, requestRepositoryDetails } from './github';
+
 function debounce(func, wait : number) {
   var timeout : number | undefined;
   return function(): void {
@@ -46,6 +48,10 @@ function recompile() {
 const debouncedRecompile = debounce( recompile, 500 );
 
 export function update( message : Message, state : State, dispatch ) {
+  if (message.type === "set-repository-details") {
+    console.log(message);
+  }
+  
   if (message.type === 'window-resize') {
     debouncedRecompile();
     return state;
@@ -64,7 +70,8 @@ export function update( message : Message, state : State, dispatch ) {
     return result;
   }
 
-  return state;
+  return {...state,
+          ...updateRepositoryDetails( message, state, dispatch )};  
 }
 
 export function init( state : State, dispatch ) : State {
@@ -79,6 +86,8 @@ export function init( state : State, dispatch ) : State {
                   terminal: '',
                   viewingSource: false
                  };
+
+  requestRepositoryDetails( params.owner, params.repo, dispatch );  
   
   texWorker.onmessage = function (event) {
     if (event.data.text) {
