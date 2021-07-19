@@ -5,7 +5,7 @@ export class NavigationMessage {
 
 export class SetDviMessage {
   type: "set-dvi" = "set-dvi";
-  constructor(public dvi : Buffer, public pathname : string ) {};  
+  constructor(public dvi : Buffer, public hsize : number, public pathname : string ) {};  
 }
 
 export class ResizeMessage {

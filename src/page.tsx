@@ -23,9 +23,19 @@ function debounce(func, wait : number) {
   };
 };
 
+function appropriateHsize() {
+  let fullWidth = (document.body.clientWidth * 72 / 96);
+  if (fullWidth > 6.5 * 72)
+    return 6.5 * 72;
+
+  // some whitespace even on small screens
+  fullWidth = fullWidth - 30;
+  
+  return fullWidth;
+}
+
 function recompile() {
-  let hsize = (document.body.clientWidth * 72 / 96) - 72*2;
-  console.log('recompiling with hsize=',hsize);
+  let hsize = appropriateHsize();
   texWorker.postMessage({ hsize,
                           firstTime: false
                         });
@@ -46,18 +56,11 @@ export function update( message : Message, state : State, dispatch ) {
   }
 
   if (message.type === 'set-dvi') {
-    let result = {...state, loading: false, dvi: message.dvi,
+    let result = {...state, loading: false,
+                  dvi: message.dvi,
+                  hsize: message.hsize,
                   terminal: ''};
 
-    /*
-    if (result.dvi === undefined)
-      result.dvi = new Map();
-
-    result.dvi.set(message.pathname, message.dvi);
-    */
-
-    console.log('SET DVI');
-    console.log(result);
     return result;
   }
 
@@ -67,6 +70,7 @@ export function update( message : Message, state : State, dispatch ) {
 export function init( state : State, dispatch ) : State {
   let params = state.routeParams;
   let url = `/github/${params.owner}/${params.repo}/${params.filename}.tex`;
+  let hsize = appropriateHsize();  
   let newState = {...state,
                   owner: params.owner,
                   repo: params.repo,
@@ -84,12 +88,13 @@ export function init( state : State, dispatch ) : State {
     if (event.data.dvi) {
       console.log(event.data.dvi);
       dispatch( new SetDviMessage(event.data.dvi,
+                                  event.data.hsize,
                                   stateToPathname(newState)) );
     }
   };
 
   texWorker.postMessage({ url,
-                          hsize: (document.body.clientWidth * 72 / 96) - 72*2,
+                          hsize,
                           firstTime: true
                         });
   
@@ -97,13 +102,20 @@ export function init( state : State, dispatch ) : State {
 }
 
 export function view( {state, dispatch} : { state : State, dispatch : Dispatcher } ): VNode {
-  if (state.dvi) {
+  if (state.dvi && state.hsize) {
     /*const dvi = state.dvi.get(stateToPathname(state));
     console.log(dvi);*/
     //if (dvi) {
     let rendered = render(state.dvi);
-    return <div style={{"margin-top":"0.25in", "margin-bottom": "0.5in"}} class={{container:true}}>{ rendered }</div>;
+    let fullWidth = (document.body.clientWidth * 72 / 96);        
+    let paddingLeft = (fullWidth - state.hsize) / 2.0;
+    return <div style={{"margin-right": "0in",
+                        "margin-left":"0in",
+                        "margin-top":"0.25in",
+                        "padding-left": `${paddingLeft}pt`,
+                        "margin-bottom": "0.5in"}} class={{container:true}}>{ rendered }</div>;
     //    }
+    
   }
 
   

@@ -139,7 +139,7 @@ async function recompile(e) {
     console.log('Trying to read resurrected output...');
     const data = library.readFileSync('texput.dvi');
     const aux = library.readFileSync('texput.aux');
-    postMessage({dvi: data.buffer});    
+    postMessage({dvi: data.buffer, hsize: library.getHsize()});    
   });
   
   library.resurrect();
@@ -165,7 +165,7 @@ async function firstTime(e) {
         console.log('Trying to read first-run output...');
         const data = library.readFileSync('texput.dvi');
         const aux = library.readFileSync('texput.aux');
-        postMessage({dvi: data.buffer});    
+        postMessage({dvi: data.buffer, hsize: library.getHsize()});
       });
       library.resurrect();
       /*

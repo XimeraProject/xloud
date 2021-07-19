@@ -32,7 +32,7 @@ export default interface State {
 
   component?: Component;
 
-  counter ?: number;
+  hsize ?: number;
 }
 
 export function stateToPathname( state : State ) : string {

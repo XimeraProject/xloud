@@ -98,6 +98,10 @@ export function setHsize(s) {
   hsize = s;
 }
 
+export function getHsize() {
+  return hsize;
+}
+
 export function setTexput(buffer) {
   if (typeof buffer === 'string') {
     let encoder = new TextEncoder();
@@ -648,7 +652,8 @@ export function resurrect() {
   console.log('AGAIN starting rewind and copying');
 
   wasmExports.setStackPointer(stackPointer);
-  wasmExports.asyncify_start_rewind(DATA_ADDR);  
+  wasmExports.asyncify_start_rewind(DATA_ADDR);
+  
   wasmExports.main();
   console.log('exited main');
   wasmExports.asyncify_stop_unwind();   
