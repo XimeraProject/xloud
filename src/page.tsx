@@ -11,26 +11,58 @@ import { TerminalLogMessage, SetDviMessage } from './message';
 
 import { stateToPathname } from './state';
 
+function debounce(func, wait : number) {
+  var timeout : number | undefined;
+  return function(): void {
+    function later() {
+      timeout = undefined;
+      func();
+    }
+    window.clearTimeout(timeout);
+    timeout = window.setTimeout(later, wait);
+  };
+};
+
+function recompile() {
+  let hsize = (document.body.clientWidth * 72 / 96) - 72*2;
+  console.log('recompiling with hsize=',hsize);
+  texWorker.postMessage({ hsize,
+                          firstTime: false
+                        });
+}
+
+(window as any).recompile = recompile;
+
+const debouncedRecompile = debounce( recompile, 500 );
+
 export function update( message : Message, state : State, dispatch ) {
+  if (message.type === 'window-resize') {
+    debouncedRecompile();
+    return state;
+  }
+  
   if (message.type === 'terminal-log') {
     return {...state, terminal: state.terminal + message.text };
   }
 
   if (message.type === 'set-dvi') {
-    let result = {...state, loading: false, terminal: ''};
-      
+    let result = {...state, loading: false, dvi: message.dvi,
+                  terminal: ''};
+
+    /*
     if (result.dvi === undefined)
       result.dvi = new Map();
 
     result.dvi.set(message.pathname, message.dvi);
+    */
 
+    console.log('SET DVI');
     console.log(result);
     return result;
   }
 
   return state;
 }
-
 
 export function init( state : State, dispatch ) : State {
   let params = state.routeParams;
@@ -57,7 +89,8 @@ export function init( state : State, dispatch ) : State {
   };
 
   texWorker.postMessage({ url,
-                          hsize: (document.body.clientWidth * 72 / 96) - 72*2
+                          hsize: (document.body.clientWidth * 72 / 96) - 72*2,
+                          firstTime: true
                         });
   
   return newState;
@@ -65,12 +98,12 @@ export function init( state : State, dispatch ) : State {
 
 export function view( {state, dispatch} : { state : State, dispatch : Dispatcher } ): VNode {
   if (state.dvi) {
-    const dvi = state.dvi.get(stateToPathname(state));
-    console.log(dvi);
-    if (dvi) {
-      let rendered = render(dvi);
-      return <div style={{"margin-top":"0.25in", "margin-bottom": "0.5in"}} class={{container:true}}>{ rendered }</div>;
-    }
+    /*const dvi = state.dvi.get(stateToPathname(state));
+    console.log(dvi);*/
+    //if (dvi) {
+    let rendered = render(state.dvi);
+    return <div style={{"margin-top":"0.25in", "margin-bottom": "0.5in"}} class={{container:true}}>{ rendered }</div>;
+    //    }
   }
 
   

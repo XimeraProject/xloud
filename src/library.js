@@ -14,6 +14,7 @@ async function findMatch(partialPath) {
 // fake files
 
 let files = [];
+let filesBackup = [];
 let urlRoot = '';
 let currentDirectory = '';
 let texput;
@@ -23,6 +24,38 @@ let hsize = 6.5*72;
 
 export function deleteEverything() {
   files = [];
+}
+
+export function snapshotFiles() {
+  filesBackup = [];
+  
+  for (const f of files) {
+    let c = {...f};
+    if (c.buffer)
+      c.buffer = new Uint8Array(f.buffer);
+    if (c.content)
+      c.content = new Uint8Array(f.content);
+    
+    filesBackup.push(c);
+  }
+
+  return;
+}
+
+export function restoreFiles() {
+  files = [];
+  
+  for (const f of filesBackup) {
+    let c = {...f};
+    if (c.buffer)
+      c.buffer = new Uint8Array(f.buffer);
+    if (c.content)
+      c.content = new Uint8Array(f.content);
+    
+    files.push(c);
+  }
+
+  return;
 }
 
 export function setTexliveVersion(v) {
@@ -111,8 +144,11 @@ export function readFileSync(filename) {
 let texmf = {};
 
 let sleeping = false;
+let snapshotting = false;
+
 function openSync(filename, mode) {
   console.log('attempting to open', filename, 'in mode', mode);
+  console.log(filename);
   
   // FIXME: this seems like a bug with TeXlive?
   if (filename.startsWith('"')) {
@@ -316,6 +352,7 @@ const process = {
 // setup
 
 let memory;
+let memoryBackup;
 let inputBuffer = '';
 let callback = function () { throw Error('callback undefined'); };
 let view;
@@ -329,6 +366,10 @@ export function setDirectory(d) {
 export function setMemory(m) {
   memory = m;
   view = new Int32Array(m);
+}
+
+export function setMemoryBackup(m) {
+  memoryBackup = m;
 }
 
 export function setWasmExports(m) {
@@ -373,7 +414,9 @@ function startUnwind() {
 
 function startRewind() {
   wasmExports.asyncify_start_rewind(DATA_ADDR);
+  
   wasmExports.main();
+  
   if (windingDepth == 0) {
     callback();
   }
@@ -589,7 +632,60 @@ export function getfilesize(length, pointer) {
   return 0;
 }
 
+let windingBackup;
+let stackPointer = 0;
+
+export function resurrect() {
+  console.log('attempting to resurrect');
+  var uint32View = new Uint32Array(memoryBackup);
+
+  view.set( uint32View );
+
+  restoreFiles();
+  windingDepth = windingBackup;
+  snapshotting = true;
+
+  console.log('AGAIN starting rewind and copying');
+
+  wasmExports.setStackPointer(stackPointer);
+  wasmExports.asyncify_start_rewind(DATA_ADDR);  
+  wasmExports.main();
+  console.log('exited main');
+  wasmExports.asyncify_stop_unwind();   
+}
+
 export function snapshot() {
+  console.log('in snapshot');
+  
+  if (!snapshotting) {
+    console.log('starting unwind');
+    snapshotting = true;
+
+    startUnwind();
+
+    setTimeout(function() {
+      console.log('starting rewind and copying');
+
+      windingBackup = windingDepth;
+
+      var uint32View = new Uint32Array(memoryBackup);
+      uint32View.set( view );
+      snapshotFiles();
+      console.log(files);
+      console.log(filesBackup);      
+
+      stackPointer = wasmExports.getStackPointer();
+      console.log('SP=',stackPointer);
+      
+      wasmExports.asyncify_start_rewind(DATA_ADDR);
+      wasmExports.main();
+    }, 1);
+  } else {
+    console.log('stop rewind!');
+    stopRewind();
+    snapshotting = false;
+  }
+
   console.log('-snapshot-');
   return 1;
 }

@@ -27,9 +27,12 @@ export default interface State {
   databases?: Map<string, any>;
   shadows?: Map<string, any>;
   saving?: Map<string, boolean>;
-  dvi?: Map<string, Buffer>;
+  //dvi?: Map<string, Buffer>;
+  dvi ?: Buffer;
 
   component?: Component;
+
+  counter ?: number;
 }
 
 export function stateToPathname( state : State ) : string {

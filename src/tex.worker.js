@@ -1,6 +1,6 @@
 
 import texCorePath from '../tex/core.565e78b2c4ab.dump.gz';
-import texBinaryPath from '../tex/out.f9c8838f85a0.wasm';
+import texBinaryPath from '../tex/out.65aa873359a6.wasm';
 import * as library from './library.js';
 
 import pako from 'pako';
@@ -35,6 +35,8 @@ async function load() {
   compiled = new WebAssembly.Module(code);
   postMessage({text: "."});
 
+  console.log(compiled);
+  
   if (coredump)
     return coredump;
   
@@ -76,6 +78,10 @@ async function compile(callback) {
   const buffer = new Uint8Array(memory.buffer, 0, pages * 65536);
   buffer.set(copy(coredump));
   library.setMemory(memory.buffer);
+  
+  const memoryBackup = new WebAssembly.Memory({ initial: pages, maximum: pages });    
+  library.setMemoryBackup(memoryBackup.buffer);
+  
   console.log( 'TEXLIVE', process.env.TEXLIVE_VERSION );
   library.setTexliveVersion( process.env.TEXLIVE_VERSION );
   
@@ -95,11 +101,13 @@ async function compile(callback) {
   let instance;
 
   try {
-    postMessage({text: "Instantiating WebAssembly..."});    
+    postMessage({text: "Instantiating WebAssembly..."});
+
     instance = await WebAssembly.instantiate(compiled, {
       library,
-      env: { memory },
+      env: { memory }
     });
+
   } catch (err) {
     console.log(err);
   }
@@ -109,6 +117,7 @@ async function compile(callback) {
 
   postMessage({text: "Launched!\n\n"});
   wasmExports.main();
+  wasmExports.asyncify_stop_unwind();  
 }
 
 function fetchInput(url) {
@@ -124,13 +133,22 @@ function fetchInput(url) {
   });
 }
 
-onmessage = async function(e) {
+async function recompile(e) {
+  library.setCallback(() => {
+    const filename = 'texput.dvi';
+    console.log('Trying to read resurrected output...');
+    const data = library.readFileSync('texput.dvi');
+    const aux = library.readFileSync('texput.aux');
+    postMessage({dvi: data.buffer});    
+  });
+  
+  library.resurrect();
+}
+
+async function firstTime(e) {
   let url = e.data.url;
   let source = await fetchInput(url);
 
-  if (e.data.hsize)
-    library.setHsize( e.data.hsize );
-  
   library.deleteEverything();
   library.setTexput(source);
   library.setTexputAux(new Uint8Array());
@@ -142,16 +160,40 @@ onmessage = async function(e) {
   compile( function (err, dvi) {
     if (err) {
     } else {
-      const aux = library.readFileSync('texput.aux');
-      library.deleteEverything();
-      library.setTexput(source);
-      library.setTexputAux(aux);
+      library.setCallback(() => {
+        const filename = 'texput.dvi';
+        console.log('Trying to read first-run output...');
+        const data = library.readFileSync('texput.dvi');
+        const aux = library.readFileSync('texput.aux');
+        postMessage({dvi: data.buffer});    
+      });
+      library.resurrect();
+      /*
+        const aux = library.readFileSync('texput.aux');
+        library.deleteEverything();
+        library.setTexput(source);
+        library.setTexputAux(aux);
+      */
+      /*
       compile( function (err, dvi) {
         if (err) {
         } else {
           postMessage({dvi: dvi});
         }
       });
+      */
     }
   });
 }
+
+onmessage = async function(e) {
+  if (e.data.hsize)
+    library.setHsize( e.data.hsize );
+  
+  if (e.data.firstTime)
+    firstTime(e);
+  else
+    recompile(e);
+}
+
+  
