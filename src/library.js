@@ -147,6 +147,39 @@ export function readFileSync(filename) {
 
 let texmf = {};
 
+async function openFromGithub( filename, mode ) {
+  let resolved = path.resolve( path.dirname(urlRoot), filename );
+
+  const request = new Request(resolved);
+  const response = await fetch(request);
+  
+  if (response.ok && response.status) {
+    const buffer = response.arrayBuffer();
+
+    files.push({
+      filename,
+      position: 0,
+      position2: 0,                                     
+      erstat: 0,
+      buffer: new Uint8Array(buffer),
+      descriptor: files.length,
+    });
+    startRewind();
+    return;
+  }
+      
+  files.push({
+    filename,
+    position: 0,
+    position2: 0,                                   
+    erstat: (mode == 'r') ? 1 : 0,
+    buffer: new Uint8Array(),
+    descriptor: files.length,
+  });
+  startRewind();  
+  return;  
+}
+
 let sleeping = false;
 let snapshotting = false;
 
@@ -284,16 +317,8 @@ function openSync(filename, mode) {
         }
       } else {
 	console.log('File does not exist:', filename);
-	      
-	files.push({
-          filename,
-	  position: 0,
-          position2: 0,                                   
-	  erstat: (mode == 'r') ? 1 : 0,
-	  buffer: new Uint8Array(),
-	  descriptor: files.length,
-	});
-	startRewind();
+
+        openFromGithub(filename, mode);        
       }
     });
   } else {

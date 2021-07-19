@@ -159,7 +159,9 @@ async function firstTime(e) {
   let url = e.data.url;
   let source = await fetchInput(url);
 
+  // FIXME: should kill the backups too
   library.deleteEverything();
+  library.setUrlRoot(url);
   library.setTexput(source);
   library.setTexputAux(new Uint8Array());
   
@@ -174,8 +176,6 @@ async function firstTime(e) {
     } else {
       library.setCallback(() => {
         isRunning = false;        
-        const filename = 'texput.dvi';
-        console.log('Trying to read first-run output...');
         const data = library.readFileSync('texput.dvi');
         const aux = library.readFileSync('texput.aux');
         postMessage({dvi: data.buffer, hsize: library.getHsize()});
