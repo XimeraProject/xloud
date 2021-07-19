@@ -18,6 +18,8 @@ let compiled;
 var theTerminal;
 var editor;
 
+let isRunning = false;
+
 async function load() {
   if (!code) {
     code = await localForage.getItem('tex');
@@ -134,18 +136,26 @@ function fetchInput(url) {
 }
 
 async function recompile(e) {
+  // FIXME: probably should provide an actual error
+  if (isRunning) return;
+  
   library.setCallback(() => {
+    isRunning = false;    
     const filename = 'texput.dvi';
     console.log('Trying to read resurrected output...');
     const data = library.readFileSync('texput.dvi');
     const aux = library.readFileSync('texput.aux');
     postMessage({dvi: data.buffer, hsize: library.getHsize()});    
   });
-  
+
+  isRunning = true;
   library.resurrect();
 }
 
 async function firstTime(e) {
+  // FIXME: probably should provide an actual error  
+  if (isRunning) return;
+  
   let url = e.data.url;
   let source = await fetchInput(url);
 
@@ -157,16 +167,20 @@ async function firstTime(e) {
     postMessage({text: x});
   });
 
+  isRunning = true;
   compile( function (err, dvi) {
+    isRunning = false;
     if (err) {
     } else {
       library.setCallback(() => {
+        isRunning = false;        
         const filename = 'texput.dvi';
         console.log('Trying to read first-run output...');
         const data = library.readFileSync('texput.dvi');
         const aux = library.readFileSync('texput.aux');
         postMessage({dvi: data.buffer, hsize: library.getHsize()});
       });
+      isRunning = true;
       library.resurrect();
       /*
         const aux = library.readFileSync('texput.aux');
@@ -189,7 +203,7 @@ async function firstTime(e) {
 onmessage = async function(e) {
   if (e.data.hsize)
     library.setHsize( e.data.hsize );
-  
+
   if (e.data.firstTime)
     firstTime(e);
   else
