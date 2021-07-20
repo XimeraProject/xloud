@@ -2083,10 +2083,10 @@ duplexer3@^0.1.4:
   resolved "https://registry.yarnpkg.com/duplexer3/-/duplexer3-0.1.4.tgz#ee01dd1cac0ed3cbc7fdbea37dc0a8f1ce002ce2"
   integrity sha1-7gHdHKwO08vH/b6jfcCo8c4ALOI=
 
-dvi2html@^1.0.1:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/dvi2html/-/dvi2html-1.0.1.tgz#c0a03fd1681c259530c8592b1ac3953209ae8e3d"
-  integrity sha512-+tV17vVsS7gb4mbQaTvQJeHJwSDynH4s0C1aoF4iF1I4gJYQFGVz7+QehLiB9LgOahsOyXmLABRG5gPDJSSteQ==
+dvi2html@1.3.0:
+  version "1.3.0"
+  resolved "https://registry.yarnpkg.com/dvi2html/-/dvi2html-1.3.0.tgz#d1d6425d53d337c8b0864ba5f680bac266fe70f1"
+  integrity sha512-WmU/Bs42L2dINjh0eCdGohuQ9741gzE1vSulhADyXqt9aWbp9JVgsfxvb/ovWSKNh2A14UbFzHotSLr3MTQEXg==
   dependencies:
     buffer "^6.0.3"
     stream-browserify "^3.0.0"

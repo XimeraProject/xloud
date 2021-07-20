@@ -2290,11 +2290,11 @@
       };
     }
     {
-      name = "dvi2html___dvi2html_1.0.1.tgz";
+      name = "dvi2html___dvi2html_1.3.0.tgz";
       path = fetchurl {
-        name = "dvi2html___dvi2html_1.0.1.tgz";
-        url  = "https://registry.yarnpkg.com/dvi2html/-/dvi2html-1.0.1.tgz";
-        sha1 = "c0a03fd1681c259530c8592b1ac3953209ae8e3d";
+        name = "dvi2html___dvi2html_1.3.0.tgz";
+        url  = "https://registry.yarnpkg.com/dvi2html/-/dvi2html-1.3.0.tgz";
+        sha1 = "d1d6425d53d337c8b0864ba5f680bac266fe70f1";
       };
     }
     {
@@ -4815,6 +4815,14 @@
         name = "mkdirp___mkdirp_1.0.4.tgz";
         url  = "https://registry.yarnpkg.com/mkdirp/-/mkdirp-1.0.4.tgz";
         sha1 = "3eb5ed62622756d79a5f0e2a221dfebad75c2f7e";
+      };
+    }
+    {
+      name = "moment___moment_2.29.1.tgz";
+      path = fetchurl {
+        name = "moment___moment_2.29.1.tgz";
+        url  = "https://registry.yarnpkg.com/moment/-/moment-2.29.1.tgz";
+        sha1 = "b2be769fa31940be9eeea6469c075e35006fa3d3";
       };
     }
     {
