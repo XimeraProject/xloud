@@ -153,9 +153,9 @@ async function openFromGithub( filename, mode ) {
   const request = new Request(resolved);
   const response = await fetch(request);
   
-  if (response.ok && response.status) {
-    const buffer = response.arrayBuffer();
-
+  if (response.ok && (response.status === 200)) {
+    const buffer = await response.arrayBuffer();
+    
     files.push({
       filename,
       position: 0,
@@ -268,6 +268,7 @@ function openSync(filename, mode) {
     findMatch(filename).then((fullFilename) => {
 
       if (filename == 'pgfsys-ximera.def') fullFilename = '/local-texmf/tex/latex/ximeraLatex/pgfsys-ximera.def';
+      if (filename == 'graphics.cfg') fullFilename = '/local-texmf/tex/latex/ximeraLatex/graphics.cfg';
       if (filename == 'ximera.cls') fullFilename = '/local-texmf/tex/latex/ximeraLatex/ximera.cls?' + Date.now();
 
       console.log('looking up', filename,'as',fullFilename);

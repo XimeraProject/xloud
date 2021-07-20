@@ -80,6 +80,6 @@ export async function get(req, res, next) {
       res.sendStatus(500);
     });
   } else {
-    res.sendStatus(404);    
+    res.sendStatus(404);
   }
 }

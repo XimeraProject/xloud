@@ -1,5 +1,4 @@
-
-import texCorePath from '../tex/core.565e78b2c4ab.dump.gz';
+import texCorePath from '../tex/core.db3d346b66b7.dump.gz';
 import texBinaryPath from '../tex/out.65aa873359a6.wasm';
 import * as library from './library.js';
 
@@ -182,20 +181,6 @@ async function firstTime(e) {
       });
       isRunning = true;
       library.resurrect();
-      /*
-        const aux = library.readFileSync('texput.aux');
-        library.deleteEverything();
-        library.setTexput(source);
-        library.setTexputAux(aux);
-      */
-      /*
-      compile( function (err, dvi) {
-        if (err) {
-        } else {
-          postMessage({dvi: dvi});
-        }
-      });
-      */
     }
   });
 }

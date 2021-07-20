@@ -44,9 +44,11 @@ app.get('/github/:owner/:repo/:path(*.tex)', github.findRepository, github.get )
 app.get('/github/:owner/:repo/:path(*.sty)', github.findRepository, github.get );
 app.get('/github/:owner/:repo/:path(*.dvi)', github.findRepository, github.get );
 app.get('/github/:owner/:repo/:path(*.png)', github.findRepository, github.get );
+app.get('/github/:owner/:repo/:path(*.*)', github.findRepository, github.get );
 
 // FIXME: should send 'isomorphic' content
 app.get('*', function (request, response) {
+  console.log('extra');
   response.sendFile(path.resolve(__dirname, '../dist/index.html'));
 });
 

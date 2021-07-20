@@ -1,8 +1,23 @@
 import { dvi2vdom } from 'dvi2html';
 import './fonts/tex/tex.css';
 
-import { h } from 'snabbdom'; // helper function for creating vnodes
+import { h, VNode } from 'snabbdom'; // helper function for creating vnodes
 import { Buffer } from 'buffer';
+
+function ximeraRuleHandler( data : string ) : VNode[] {
+  let kind = data.split(' ')[0];
+  let payload = data.split(' ')[1];  
+
+  if (kind === 'youtube') {
+    return [h('iframe', { attrs: { width: "100%", height: "100%",
+                                   frameborder: "0",
+                                   allowfullscreen: true,
+                                   src: `https://www.youtube.com/embed/${payload}`} }
+             )];
+  }
+    
+  return [h('div', {}, data )];
+}
 
 export function render(dvi) {
   let vdoms = [] as any;
@@ -24,6 +39,7 @@ export function render(dvi) {
   let buffer = new Buffer(dvi);
 
   let result = dvi2vdom(buffer, h,
+                        ximeraRuleHandler,
 	   (vdom) => {
 	     vdoms.push(vdom);
 	   });

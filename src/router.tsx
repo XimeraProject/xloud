@@ -13,7 +13,7 @@ function findRoute( pathname : string, state : State, dispatch : Dispatcher ) : 
   // FIXME: ugh this is such an ugly hack, and actually seems to fall
   // in some sort of race condition on the deployed website
   if (pathname === '/') {
-    let href = '/XimeraProject/about/overview.tex';
+    let href = '/XimeraProject/about/overview';
     setTimeout( () => history.replaceState(null, '', href), 100);
     setTimeout( () => dispatch(new NavigationMessage(href)), 100);
     return { ...state,
