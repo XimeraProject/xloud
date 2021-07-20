@@ -15,7 +15,11 @@ function ximeraRuleHandler( data : string ) : VNode[] {
                                    src: `https://www.youtube.com/embed/${payload}`} }
              )];
   }
-    
+
+  if (kind === 'answer') {
+    return [h('input', { style: { width: "100%", height: "100%" }})];
+  }
+  
   return [h('div', {}, data )];
 }
 

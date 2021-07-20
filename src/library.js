@@ -63,6 +63,7 @@ export function setTexliveVersion(v) {
 }
 
 export async function download(url) {
+  console.log('in downloading from',url);
   const request = new Request(url);  
   const response = await fetch(request);
   const buffer = response.arrayBuffer();
@@ -268,7 +269,6 @@ function openSync(filename, mode) {
     findMatch(filename).then((fullFilename) => {
 
       if (filename == 'pgfsys-ximera.def') fullFilename = '/local-texmf/tex/latex/ximeraLatex/pgfsys-ximera.def';
-      if (filename == 'graphics.cfg') fullFilename = '/local-texmf/tex/latex/ximeraLatex/graphics.cfg';
       if (filename == 'ximera.cls') fullFilename = '/local-texmf/tex/latex/ximeraLatex/ximera.cls?' + Date.now();
 
       console.log('looking up', filename,'as',fullFilename);
@@ -290,6 +290,7 @@ function openSync(filename, mode) {
 	  });
           startRewind();
         } else {
+          console.log('downloading from',fullFilename);
 	  download(fullFilename).then((buffer) => {
 	    files.push({
               filename,
@@ -658,6 +659,11 @@ export function put(descriptor, pointer, length) {
 export function getfilesize(length, pointer) {
   var buffer = new Uint8Array( memory, pointer, length );
   var filename = String.fromCharCode.apply(null, buffer);
+
+  if (filename.startsWith('expl3.sty'))
+    return 6208;
+  if (filename.startsWith('l3backend-dvips.def'))
+    return 33684; 
 
   return 0;
 }
