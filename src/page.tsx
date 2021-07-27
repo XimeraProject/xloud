@@ -1,5 +1,4 @@
 import { jsx, VNode } from "snabbdom";
-import { view as Spinner } from './spinner';
 
 import Worker from "./tex.worker";
 let texWorker = new Worker();
@@ -11,7 +10,12 @@ import { TerminalLogMessage, SetDviMessage } from './message';
 
 import { stateToPathname } from './state';
 
-import { updateRepositoryDetails, requestRepositoryDetails } from './github';
+import { updateRepository, requestRepository } from './github';
+
+import { BackgroundProcess, BackgroundProcessComponent } from './background-process';
+const backgroundProcessView = BackgroundProcessComponent.view;
+const backgroundProcessUpdate = BackgroundProcessComponent.update;
+
 
 function debounce(func, wait : number) {
   var timeout : number | undefined;
@@ -48,47 +52,61 @@ function recompile() {
 const debouncedRecompile = debounce( recompile, 500 );
 
 export function update( message : Message, state : State, dispatch ) {
-  if (message.type === "set-repository-details") {
-    console.log(message);
-  }
+  let newState = {...state,
+                  ...backgroundProcessUpdate( message, state, dispatch ),
+                  ...updateRepository( message, state, dispatch )};
+
+  if (message.type === 'set-repository') {
+    if (newState.repository) {
+      let url = newState.repository.url( `${state.texFilename}.tex` );
+      let hsize = appropriateHsize();  
+
+      texWorker.postMessage({ url,
+                              hsize,
+                              firstTime: true
+                            });
+      return {...newState,
+              backgroundProcess: new BackgroundProcess('Initial compile'),
+             };
+    }
+  }  
   
   if (message.type === 'window-resize') {
     debouncedRecompile();
-    return state;
+    return newState;
   }
   
   if (message.type === 'terminal-log') {
-    return {...state, terminal: state.terminal + message.text };
+    return {...newState, terminal: state.terminal + message.text };
   }
 
   if (message.type === 'set-dvi') {
-    let result = {...state, loading: false,
+    let result = {...newState, loading: false,
                   dvi: message.dvi,
-                  hsize: message.hsize,
-                  terminal: ''};
+                  hsize: message.hsize };
+                  //terminal: ''};
 
     return result;
   }
 
-  return {...state,
-          ...updateRepositoryDetails( message, state, dispatch )};  
+  return newState;
 }
 
 export function init( state : State, dispatch ) : State {
   let params = state.routeParams;
-  let url = `/github/${params.owner}/${params.repo}/${params.filename}.tex`;
-  let hsize = appropriateHsize();  
+
+  /*
   let newState = {...state,
                   owner: params.owner,
                   repo: params.repo,
                   texFilename: `${params.filename}.tex`,
                   loading: url,
                   terminal: '',
-                  viewingSource: false
-                 };
+                  viewingSource: false,
+                 };*/
 
-  requestRepositoryDetails( params.owner, params.repo, dispatch );  
-  
+  requestRepository( params.owner, params.repo, dispatch );
+
   texWorker.onmessage = function (event) {
     if (event.data.text) {
       dispatch( new TerminalLogMessage(event.data.text) );
@@ -97,20 +115,22 @@ export function init( state : State, dispatch ) : State {
     if (event.data.dvi) {
       console.log(event.data.dvi);
       dispatch( new SetDviMessage(event.data.dvi,
-                                  event.data.hsize,
-                                  stateToPathname(newState)) );
+                                  event.data.hsize) );
     }
   };
-
-  texWorker.postMessage({ url,
-                          hsize,
-                          firstTime: true
-                        });
   
-  return newState;
+  return {...state,
+          backgroundProcess: new BackgroundProcess('Fetching repository'),
+          repository: undefined,
+          texFilename: `${params.filename}.tex`,
+          viewingSource: false,
+         };
 }
 
 export function view( {state, dispatch} : { state : State, dispatch : Dispatcher } ): VNode {
+  if (state.backgroundProcess)
+    return backgroundProcessView( {state, dispatch} );
+  
   if (state.dvi && state.hsize) {
     /*const dvi = state.dvi.get(stateToPathname(state));
     console.log(dvi);*/
@@ -123,8 +143,6 @@ export function view( {state, dispatch} : { state : State, dispatch : Dispatcher
                         "margin-top":"0.25in",
                         "padding-left": `${paddingLeft}pt`,
                         "margin-bottom": "0.5in"}} class={{container:true}}>{ rendered }</div>;
-    //    }
-    
   }
 
   
@@ -136,8 +154,6 @@ export function view( {state, dispatch} : { state : State, dispatch : Dispatcher
     }
   }
   
-  if (state.loading)
-    return <Spinner state={state} dispatch={dispatch}/>;
 
   return  <div class={{container:true}}>    
     <p>Could not load DVI.</p>

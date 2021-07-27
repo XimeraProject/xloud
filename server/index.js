@@ -40,11 +40,11 @@ app.use('/local-texmf', express.static(path.resolve(__dirname, '../local-texmf')
 app.get('/github/:owner/:repo.json', github.findRepository, github.getRepository );
 
 // FIXME: should include some rate-limiting
-app.get('/github/:owner/:repo/:path(*.tex)', github.findRepository, github.get );
-app.get('/github/:owner/:repo/:path(*.sty)', github.findRepository, github.get );
-app.get('/github/:owner/:repo/:path(*.dvi)', github.findRepository, github.get );
-app.get('/github/:owner/:repo/:path(*.png)', github.findRepository, github.get );
-app.get('/github/:owner/:repo/:path(*.*)', github.findRepository, github.get );
+app.get('/github/:owner/:repo/:commit([0-9a-f]{40})/:path(*.tex)', github.findRepository, github.get );
+app.get('/github/:owner/:repo/:commit([0-9a-f]{40})/:path(*.sty)', github.findRepository, github.get );
+app.get('/github/:owner/:repo/:commit([0-9a-f]{40})/:path(*.dvi)', github.findRepository, github.get );
+app.get('/github/:owner/:repo/:commit([0-9a-f]{40})/:path(*.png)', github.findRepository, github.get );
+app.get('/github/:owner/:repo/:commit([0-9a-f]{40})/:path(*.*)', github.findRepository, github.get );
 
 // FIXME: should send 'isomorphic' content
 app.get('*', function (request, response) {

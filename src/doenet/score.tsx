@@ -48,13 +48,13 @@ async function requestScore(state : State, dispatch : Dispatcher): Promise<void>
 
 export function update( message : Message, state : State, dispatch : Dispatcher ) : State {
   if (message.type === 'set-doenet-token') {
-    if (state.owner && state.repo && state.texFilename) {
+    if (state.repository && state.texFilename) {
       requestScore( state, dispatch );
     }
   }
 
   if (message.type === 'navigate-to') {
-    if (state.owner && state.repo && state.texFilename && state.doenetToken) {
+    if (state.repository && state.texFilename && state.doenetToken) {
       requestScore( state, dispatch );
     }
   }
@@ -79,7 +79,7 @@ export function init( state : State, dispatch : Dispatcher ) : State {
 }
 
 export function view( {state, dispatch} : { state : State, dispatch : Dispatcher } ): VNode {
-  if (state.owner && state.repo && state.texFilename && state.scores && state.doenetToken)  {
+  if (state.repository && state.texFilename && state.scores && state.doenetToken)  {
     if (state.scores) {
       let pathname = stateToPathname(state);
       

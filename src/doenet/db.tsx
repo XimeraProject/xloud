@@ -35,7 +35,7 @@ export async function saveDatabase( state : State, dispatch : Dispatcher ) {
     return;
   }
 
-  if (state.owner && state.repo && state.texFilename && state.databases && state.doenetToken) {
+  if (state.repository && state.texFilename && state.databases && state.doenetToken) {
     const url = new URL(window.location.toString());
     const pathname = stateToPathname(state);
     url.pathname = pathname;
@@ -85,13 +85,13 @@ export function update( message : Message, state : State, dispatch : Dispatcher 
   };    
   
   if (message.type === 'set-doenet-token') {
-    if (state.owner && state.repo && state.texFilename) {
+    if (state.repository && state.texFilename) {
       requestDatabase( state, dispatch );
     }
   }
 
   if (message.type === 'navigate-to') {
-    if (state.owner && state.repo && state.texFilename && state.doenetToken) {
+    if (state.repository && state.texFilename && state.doenetToken) {
       requestDatabase( state, dispatch );
     }
   }
@@ -146,7 +146,7 @@ function ResponsiveHide( { long } ): VNode {
 }
 
 export function view( {state, dispatch} : { state : State, dispatch : Dispatcher } ): VNode {
-  if (state.owner && state.repo && state.texFilename && state.databases && state.doenetToken) {
+  if (state.repository && state.texFilename && state.databases && state.doenetToken) {
     let buttons : VNode[] = [];
     
     let isSaved = false;

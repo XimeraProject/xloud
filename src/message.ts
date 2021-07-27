@@ -1,3 +1,5 @@
+import { GithubRepository } from './github';
+
 export class NavigationMessage {
   type: "navigate-to" = "navigate-to";
   constructor(public path : string) {};
@@ -5,12 +7,17 @@ export class NavigationMessage {
 
 export class SetDviMessage {
   type: "set-dvi" = "set-dvi";
-  constructor(public dvi : Buffer, public hsize : number, public pathname : string ) {};  
+  constructor(public dvi : Buffer, public hsize : number ) {};  
 }
 
 export class ResizeMessage {
   type: "window-resize" = "window-resize";
   constructor(public width : number, public height : number ) {};
+}
+
+export class UpdateTimeMessage {
+  type: "update-time" = "update-time";
+  constructor() {};
 }
 
 export class ViewSourceMessage {
@@ -23,9 +30,9 @@ export class TerminalLogMessage {
   constructor(public text : string) {};
 }
 
-export class SetRepositoryDetailsMessage {
-  type: "set-repository-details" = "set-repository-details";
-  constructor(public owner : string, public repo : string, public details : any ) {};
+export class SetRepositoryMessage {
+  type: "set-repository" = "set-repository";
+  constructor(public repository : GithubRepository ) {};
 }
 
 export class DoenetDisconnectMessage {
@@ -66,10 +73,11 @@ export class ErrorMessage {
 export type Message =
   NavigationMessage |
   SetDviMessage |
+  UpdateTimeMessage |
   ResizeMessage |
   ViewSourceMessage |
   TerminalLogMessage |  
-  SetRepositoryDetailsMessage |
+  SetRepositoryMessage |
   DoenetDisconnectMessage |
   SetDoenetTokenMessage |
   SetDoenetScoreMessage |

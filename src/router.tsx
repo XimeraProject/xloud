@@ -6,6 +6,7 @@ import FourOhFour from './four-oh-four';
 import ViewSource from './view-source';
 import Spinner from './spinner';
 import Page from './page';
+import {v4} from 'uuid';
 
 import { NavigationMessage } from './message';
 
@@ -18,29 +19,32 @@ function findRoute( pathname : string, state : State, dispatch : Dispatcher ) : 
     setTimeout( () => dispatch(new NavigationMessage(href)), 100);
     return { ...state,
              component: Spinner,
-             owner: undefined,
-             repo: undefined,
+             repository: undefined,
              texFilename: undefined,
            };
   }
   
   let r = new Route('/:owner/:repo/(*filename).tex');
   if (r.match(pathname))
-    return {...ViewSource.init({...state,
-                                routeParams: r.match(pathname) },
-                               dispatch), component: ViewSource };
+    return { ...ViewSource.init({...state,
+                                 routeParams: r.match(pathname) },
+                                dispatch),
+             routeNonce: v4(),
+             component: ViewSource };
 
   r = new Route('/:owner/:repo/(*filename)');
   if (r.match(pathname))
     return {...Page.init({...state,
                           routeParams: r.match(pathname) },
-                         dispatch), component: Page };
+                         dispatch),
+            routeNonce: v4(),            
+            component: Page };
 
   // No route found!
   return { ...state,
+           routeNonce: v4(),
            component: FourOhFour,
-           owner: undefined,
-           repo: undefined,
+           repository: undefined,           
            texFilename: undefined,
          };
 }

@@ -14,13 +14,10 @@ export function view( { state, dispatch } : { state : State, dispatch : Dispatch
   let repositoryInformation : VNode[] = [];
 
   // FIXME: confirm that this matches what is being displayed
-  if (state.details) {
-    let branch = state.details.branch;
-    console.log(branch);
-    console.log(state.details);
-    
-    let sha = branch.commit.sha;
-    let author = branch.commit.commit.author;    
+  if (state.repository) {
+    let branch = state.repository.branch;
+    let sha = state.repository.sha;
+    let author = branch.commit.author;
     let branchName = branch.name;
     let shortSha = sha.slice(0,7) + '…';
 
@@ -35,25 +32,26 @@ export function view( { state, dispatch } : { state : State, dispatch : Dispatch
 
     let authorLink = <span>using git</span>;
 
-    if (author.login) {
-      let image = <div></div>;
-      if (author.avatar_url)
-        image = <img style={avatarStyle} attrs={{src:author.avatar_url}}/>;      
-      if (author.html_url)
-        authorLink = <a style={{display: "inline-block"}} attrs={{href:author.html_url}}>{image} {author.login}</a>;
-      else
-        authorLink = <span>{image} {author.login}</span>;
-    } else if (author.name) {
+    //if (author.login) {
+    let image = <div></div>;
+    if (author.avatar_url)
+      image = <img style={avatarStyle} attrs={{src:author.avatar_url}}/>;      
+    if (author.html_url)
+      authorLink = <a style={{display: "inline-block"}} attrs={{href:author.html_url}}>{image} {author.login}</a>;
+    else
+      authorLink = <span>{image} {author.login}</span>;
+    //}
+    /*else if (author.name) {
       authorLink = <span>{author.name}</span>;
       if (author.email) {
         authorLink = <span>{author.name} <code>&lt;{author.email}&gt;</code></span>;
       }
-    }
+    }*/
     
     repositoryInformation.push(
         <div style={{"margin-bottom": "12pt"}} class={{"text-muted":true}}><Responsive long="You are viewing branch" short="Branch"/> <a
       attrs={{href:branch._links.html}}>{branchName}</a> <Responsive long="of the GitHub repository" short="of"/> <a
-      attrs={{href:state.details.html_url}}>{state.details.name}</a> <Responsive long="last updated" short="updated"/> {date.fromNow()} <Responsive long="via commit" short="via"/> <a
+      attrs={{href:state.repository.htmlUrl()}}>{state.repository.name}</a> <Responsive long="last updated" short="updated"/> {date.fromNow()} <Responsive long="via commit" short="via"/> <a
       attrs={{href:branch.commit.html_url}}><code>{shortSha}</code></a> <Responsive long="by author" short="by"/> {authorLink}.
         </div>
     );    

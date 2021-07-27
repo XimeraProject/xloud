@@ -13,9 +13,9 @@ export function init( state : State, dispatch : Dispatcher ) : State {
 export function view( {state, dispatch} : { state : State, dispatch : Dispatcher } ): VNode {
   let links : VNode[] = [];  
 
-  if (state.owner && state.repo && state.branch) {
-    let directLink = `https://github.com/${state.owner}/${state.repo}/blob/${state.branch}/${state.texFilename}`;    
-    let issueHref = `https://github.com/${state.owner}/${state.repo}/issues/new?title=${state.title}&body=%0A%0ASee%20[${state.texFilename}](${directLink})`;
+  if (state.repository && state.texFilename) {
+    let directLink = state.repository.blobLink( state.texFilename );
+    let issueHref = state.repository.issueLink( state.texFilename, state.title ? state.title : '' );
     let b = <li><a class={{"dropdown-item":true}} attrs={{href:issueHref}}><Icon fa="exclamation-triangle"/>&nbsp;Report error to authors</a></li> ;
     links.push(b);
   }

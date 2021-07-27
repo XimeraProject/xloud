@@ -41,16 +41,16 @@ function ResponsiveHide( { long } ): VNode {
 export function view( {state, dispatch} : { state : State, dispatch : Dispatcher } ): VNode {
   let buttons : VNode[] = [];
 
-  if (state.owner && state.repo && state.branch) {
-    let editHref = `https://github.com/${state.owner}/${state.repo}/edit/${state.branch}/${state.texFilename}`;
+  if (state.repository && state.texFilename) {
+    let editHref = state.repository.editLink(state.texFilename);
     let b = <li class={{"nav-item":true, "me-1": true, "mb-auto": true, "mt-auto": true}}>
         <a class={{"btn": true, "btn-outline-secondary": true}} attrs={{href:editHref}} title="Edit on GitHub"><Icon fa="pencil-alt"/><ResponsiveHide long={"Edit"}/></a>
         </li>;
     buttons.push(b);
   }
 
-  if (state.owner && state.repo && state.texFilename && (state.viewingSource === true)) {
-    let viewDvi = `/${state.owner}/${state.repo}/${state.texFilename.replace(/.tex$/,'')}`;
+  if (state.repository && state.texFilename && (state.viewingSource === true)) {
+    let viewDvi = `/${state.repository.owner}/${state.repository.name}/${state.texFilename.replace(/.tex$/,'')}`;
     let b = <li class={{"nav-item":true, "me-1": true, "mb-auto": true, "mt-auto": true}}>
         <Link class={{"btn": true, "btn-outline-secondary": true}} dispatch={dispatch} href={viewDvi}><Icon fa="book-reader"/><ResponsiveHide long={"Rendered"}/></Link>
         </li>;
@@ -58,8 +58,8 @@ export function view( {state, dispatch} : { state : State, dispatch : Dispatcher
   }
   
   
-  if (state.owner && state.repo && state.texFilename && (state.viewingSource === false)) {
-    let viewSource = `/${state.owner}/${state.repo}/${state.texFilename}`;
+  if (state.repository && state.texFilename && (state.viewingSource === false)) {
+    let viewSource = `/${state.repository.owner}/${state.repository.name}/${state.texFilename}`;
     let b = <li class={{"nav-item":true, "me-1": true, "mb-auto": true, "mt-auto": true}}>
         <Link class={{"btn": true, "btn-outline-secondary": true}} dispatch={dispatch} href={viewSource}><Icon fa="code"/><ResponsiveHide long={"Source"}/></Link>
         </li>;

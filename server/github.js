@@ -53,8 +53,8 @@ export async function getRepository(req, res, next) {
 
 export async function get(req, res, next) {
   if (req.repository) {
-    const path = `${req.repository.full_name}/${req.repository.default_branch}/${req.params.path}`;
-  
+    const path = `${req.repository.full_name}/${req.params.commit}/${req.params.path}`;
+
     let options = {
       host: 'raw.githubusercontent.com',
       port: 443,
@@ -69,7 +69,8 @@ export async function get(req, res, next) {
 
       if (response.statusCode === 200) {
         res.setHeader('Content-Type', contentType);
-        res.setHeader('Cache-Control', 'public, max-age=600');
+        const oneYear = 365 * 24 * 60 * 60;
+        res.setHeader('Cache-Control', 'max-age=' + oneYear + ', immutable');
         response.pipe(res);
       } else {
         res.sendStatus(response.statusCode);

@@ -1,16 +1,20 @@
 import { Component } from './tea';
 import Route from 'route-parser';
+import { GithubRepository } from './github';
+import { BackgroundProcess } from './background-process';
 
 export default interface State {
-  owner?: string;
-  repo?: string;
+  time ?: Date;
+  
+  routeNonce?: string;
+  
+  backgroundProcess ?: BackgroundProcess;
+  
+  repository ?: GithubRepository;
+  
   texFilename?: string;
   viewingSource?: boolean;
-  
-  branch?: string;
-  details?: any;
-  
-  loading?: string | boolean;
+
   source?: string;
 
   title?: string;    
@@ -38,8 +42,8 @@ export default interface State {
 }
 
 export function stateToPathname( state : State ) : string {
-  if (state.owner && state.repo && state.texFilename)
-    return `/${state.owner}/${state.repo}/${state.texFilename}`;
+  if (state.repository && state.repository.owner && state.repository.name && state.texFilename)
+    return `/${state.repository.owner}/${state.repository.name}/${state.texFilename}`;
 
   return '';
 }

@@ -7,49 +7,67 @@ import 'prismjs/themes/prism.css';
 import { Message, State, Dispatcher, Component } from './tea';
 import { ErrorMessage, ViewSourceMessage } from './message';
 
-import { updateRepositoryDetails, requestRepositoryDetails } from './github';
+import { updateRepository, requestRepository } from './github';
+
+import { BackgroundProcess, BackgroundProcessComponent } from './background-process';
+const backgroundProcessView = BackgroundProcessComponent.view;
+const backgroundProcessUpdate = BackgroundProcessComponent.update;
+
 
 export function update( message : Message, state : State, dispatch : Dispatcher ) : State {
-  if (message.type === 'view-source') {
-    if (message.url === state.loading) {
-      return {...state, loading: undefined, source: message.source };
+  let newState = {...state,
+                  ...backgroundProcessUpdate( message, state, dispatch ),
+                  ...updateRepository( message, state, dispatch )};
+  
+  if (message.type === 'set-repository') {
+    if (newState.repository && newState.texFilename) {
+      let url = newState.repository.url( newState.texFilename );
+
+      window.setTimeout( () => {
+      fetch(url)
+        .then((response) => {
+          if (!response.ok) {
+            throw Error(response.statusText);
+          }
+          return response.text();
+        })
+        .then(data => dispatch( new ViewSourceMessage(url, data) ))
+        .catch((error) => {
+          dispatch( new ErrorMessage(error.toString()) );
+        });
+      },5000);
+
+      return {...newState,
+              backgroundProcess: new BackgroundProcess('Downloading file'),
+             };
     }
   }
+  
+  if (message.type === 'view-source') {
+    return {...newState, backgroundProcess: undefined, source: message.source };
+  }
       
-  return {...state,
-          ...updateRepositoryDetails( message, state, dispatch )};
+  return newState;
 }
 
 export function init( state : State , dispatch : Dispatcher ) : State {
   let params = state.routeParams;
-  let url = `/github/${params.owner}/${params.repo}/${params.filename}.tex`;
 
-  requestRepositoryDetails( params.owner, params.repo, dispatch );
+  window.setTimeout( () => {
+  requestRepository( params.owner, params.repo, dispatch );
+  },5000);
   
-  fetch(url)
-    .then((response) => {
-      if (!response.ok) {
-        throw Error(response.statusText);
-      }
-      return response.text();
-    })
-    .then(data => dispatch( new ViewSourceMessage(url, data) ))
-    .catch((error) => {
-      dispatch( new ErrorMessage(error.toString()) );
-    });
-
   return {...state,
-          owner: params.owner,
-          repo: params.repo,
+          backgroundProcess: new BackgroundProcess('Fetching repository'),
+          repository: undefined,
           texFilename: `${params.filename}.tex`,
-          loading: url,
           viewingSource: true,
          };
 }
 
 export function view( {state, dispatch} : { state : State, dispatch : Dispatcher } ): VNode {
-  if (state.loading)
-    return <Spinner state={state} dispatch={dispatch}/>;
+  if (state.backgroundProcess)
+    return backgroundProcessView( {state, dispatch} );
 
   if (state.source) {
     const html = Prism.highlight(state.source, Prism.languages.latex, 'latex');
