@@ -50,7 +50,7 @@ export function view( {state, dispatch} : { state : State, dispatch : Dispatcher
   }
 
   if (state.repository && state.texFilename && (state.viewingSource === true)) {
-    let viewDvi = `/${state.repository.owner.name}/${state.repository.name}/${state.texFilename.replace(/.tex$/,'')}`;
+    let viewDvi = `/${state.repository.owner.login}/${state.repository.name}/${state.texFilename.replace(/.tex$/,'')}`;
     let b = <li class={{"nav-item":true, "me-1": true, "mb-auto": true, "mt-auto": true}}>
         <Link class={{"btn": true, "btn-outline-secondary": true}} dispatch={dispatch} href={viewDvi}><Icon fa="book-reader"/><ResponsiveHide long={"Rendered"}/></Link>
         </li>;
@@ -59,7 +59,7 @@ export function view( {state, dispatch} : { state : State, dispatch : Dispatcher
   
   
   if (state.repository && state.texFilename && (state.viewingSource === false)) {
-    let viewSource = `/${state.repository.owner.name}/${state.repository.name}/${state.texFilename}`;
+    let viewSource = `/${state.repository.owner.login}/${state.repository.name}/${state.texFilename}`;
     let b = <li class={{"nav-item":true, "me-1": true, "mb-auto": true, "mt-auto": true}}>
         <Link class={{"btn": true, "btn-outline-secondary": true}} dispatch={dispatch} href={viewSource}><Icon fa="code"/><ResponsiveHide long={"Source"}/></Link>
         </li>;
