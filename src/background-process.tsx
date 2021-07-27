@@ -3,6 +3,8 @@ import { Message, State, Dispatcher, Component, Viewer, emptyInit, emptyUpdate }
 import { UpdateTimeMessage } from './message';
 import { view as Spinner } from './spinner';
 import moment from 'moment';
+import "./opacity.css";
+import "./outer-glow.css";
 
 export class BackgroundProcess {
   started : Date;
@@ -43,7 +45,7 @@ export function update( message : Message, state : State, dispatch : Dispatcher 
           time: new Date() };
 }
 
-export function view( {state, dispatch} : { state : State, dispatch : Dispatcher } ): VNode {
+export function view( {state, dispatch, background} : { state : State, dispatch : Dispatcher, background : VNode } ): VNode {
   theDispatch = dispatch;
 
   debounced();
@@ -54,21 +56,25 @@ export function view( {state, dispatch} : { state : State, dispatch : Dispatcher
     let seconds = now.diff(started, 'seconds', true);
 
     let takingSoLong = <div></div>;
+    
     if (seconds > state.backgroundProcess.estimate) {
       takingSoLong = <div>This is taking longer than expected.</div>;      
     }
     
-    return <div class={{"h-100":true, "row":true, "align-items-center":true}}>
+    return <div>
+      <div style={{"height": "0px", "margin-top": "75px"}} class={{"outer-glow":true, "row":true, "align-items-center":true}}>
       <div class={{"col":true}}>
       <Spinner dispatch={dispatch} state={state}/>
-      <div class={{"text-center": true}}>{ state.backgroundProcess.message }&hellip;</div>
-      <div class={{"text-center": true}}>{ takingSoLong }</div>
+      <div class={{"outer-glow":true, "text-center": true}}>{ state.backgroundProcess.message }&hellip;</div>
+      <div class={{"outer-glow":true, "text-center": true}}>{ takingSoLong }</div>
       </div>
+      </div>
+      <div class={{"opacity-2": true}}>{ background }</div>
       </div>;
   }
 
-  return <div>Missing backgroundProcess</div>;
+  return background;
 }
 
-export const BackgroundProcessComponent : Component = { view, init: emptyInit, update: update };
+export const BackgroundProcessComponent = { view, update: update };
 

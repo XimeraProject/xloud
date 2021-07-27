@@ -9,21 +9,16 @@ import { ErrorMessage, ViewSourceMessage } from './message';
 
 import { updateRepository, requestRepository } from './github';
 
-import { BackgroundProcess, BackgroundProcessComponent } from './background-process';
-const backgroundProcessView = BackgroundProcessComponent.view;
-const backgroundProcessUpdate = BackgroundProcessComponent.update;
-
+import { BackgroundProcess } from './background-process';
 
 export function update( message : Message, state : State, dispatch : Dispatcher ) : State {
   let newState = {...state,
-                  ...backgroundProcessUpdate( message, state, dispatch ),
                   ...updateRepository( message, state, dispatch )};
   
   if (message.type === 'set-repository') {
     if (newState.repository && newState.texFilename) {
       let url = newState.repository.url( newState.texFilename );
 
-      window.setTimeout( () => {
       fetch(url)
         .then((response) => {
           if (!response.ok) {
@@ -35,7 +30,6 @@ export function update( message : Message, state : State, dispatch : Dispatcher 
         .catch((error) => {
           dispatch( new ErrorMessage(error.toString()) );
         });
-      },5000);
 
       return {...newState,
               backgroundProcess: new BackgroundProcess('Downloading file'),
@@ -53,9 +47,7 @@ export function update( message : Message, state : State, dispatch : Dispatcher 
 export function init( state : State , dispatch : Dispatcher ) : State {
   let params = state.routeParams;
 
-  window.setTimeout( () => {
   requestRepository( params.owner, params.repo, dispatch );
-  },5000);
   
   return {...state,
           backgroundProcess: new BackgroundProcess('Fetching repository'),
@@ -66,9 +58,6 @@ export function init( state : State , dispatch : Dispatcher ) : State {
 }
 
 export function view( {state, dispatch} : { state : State, dispatch : Dispatcher } ): VNode {
-  if (state.backgroundProcess)
-    return backgroundProcessView( {state, dispatch} );
-
   if (state.source) {
     const html = Prism.highlight(state.source, Prism.languages.latex, 'latex');
 

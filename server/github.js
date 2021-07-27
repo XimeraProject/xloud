@@ -9,6 +9,8 @@ const octokit = new Octokit({
   auth: process.env.GITHUB_ACCESS_TOKEN
 });
 
+const CACHE_TIME = 15;
+
 export async function findRepository(req, res, next) {
   let key = `repo:${req.params.owner}/${req.params.repo}`;
 
@@ -31,12 +33,12 @@ export async function findRepository(req, res, next) {
 
           let result = {...repo.data,
                         branch: branch.data};
-          client.setex( key, 300, JSON.stringify(result) );
+          client.setex( key, CACHE_TIME, JSON.stringify(result) );
           req.repository = result;
         }
       } catch (e) {
         // ignore the fact that we can't get the repo, but don't check again for a little while
-        client.setex( key, 300, JSON.stringify(null) );
+        client.setex( key, CACHE_TIME, JSON.stringify(null) );
       }
     }
 

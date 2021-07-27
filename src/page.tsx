@@ -12,10 +12,7 @@ import { stateToPathname } from './state';
 
 import { updateRepository, requestRepository } from './github';
 
-import { BackgroundProcess, BackgroundProcessComponent } from './background-process';
-const backgroundProcessView = BackgroundProcessComponent.view;
-const backgroundProcessUpdate = BackgroundProcessComponent.update;
-
+import { BackgroundProcess } from './background-process';
 
 function debounce(func, wait : number) {
   var timeout : number | undefined;
@@ -51,22 +48,22 @@ function recompile() {
 
 const debouncedRecompile = debounce( recompile, 500 );
 
-export function update( message : Message, state : State, dispatch ) {
+export function update( message : Message, state : State, dispatch : Dispatcher ) : State {
   let newState = {...state,
-                  ...backgroundProcessUpdate( message, state, dispatch ),
                   ...updateRepository( message, state, dispatch )};
 
   if (message.type === 'set-repository') {
-    if (newState.repository) {
-      let url = newState.repository.url( `${state.texFilename}.tex` );
+    if (newState.repository && newState.texFilename) {
+      let url = newState.repository.url( newState.texFilename );
       let hsize = appropriateHsize();  
 
       texWorker.postMessage({ url,
                               hsize,
                               firstTime: true
                             });
+      
       return {...newState,
-              backgroundProcess: new BackgroundProcess('Initial compile'),
+              backgroundProcess: new BackgroundProcess('Running jsTeX', 30),
              };
     }
   }  
@@ -77,14 +74,18 @@ export function update( message : Message, state : State, dispatch ) {
   }
   
   if (message.type === 'terminal-log') {
-    return {...newState, terminal: state.terminal + message.text };
+    if (state.terminal) {
+      return {...newState, terminal: state.terminal + message.text };
+    } else {
+      return {...newState, terminal: message.text };      
+    }
   }
 
   if (message.type === 'set-dvi') {
-    let result = {...newState, loading: false,
+    let result = {...newState,
+                  backgroundProcess: undefined,
                   dvi: message.dvi,
                   hsize: message.hsize };
-                  //terminal: ''};
 
     return result;
   }
@@ -95,16 +96,6 @@ export function update( message : Message, state : State, dispatch ) {
 export function init( state : State, dispatch ) : State {
   let params = state.routeParams;
 
-  /*
-  let newState = {...state,
-                  owner: params.owner,
-                  repo: params.repo,
-                  texFilename: `${params.filename}.tex`,
-                  loading: url,
-                  terminal: '',
-                  viewingSource: false,
-                 };*/
-
   requestRepository( params.owner, params.repo, dispatch );
 
   texWorker.onmessage = function (event) {
@@ -113,7 +104,6 @@ export function init( state : State, dispatch ) : State {
     }
     
     if (event.data.dvi) {
-      console.log(event.data.dvi);
       dispatch( new SetDviMessage(event.data.dvi,
                                   event.data.hsize) );
     }
@@ -122,19 +112,14 @@ export function init( state : State, dispatch ) : State {
   return {...state,
           backgroundProcess: new BackgroundProcess('Fetching repository'),
           repository: undefined,
+          dvi: undefined,
           texFilename: `${params.filename}.tex`,
-          viewingSource: false,
+          viewingSource: false
          };
 }
 
 export function view( {state, dispatch} : { state : State, dispatch : Dispatcher } ): VNode {
-  if (state.backgroundProcess)
-    return backgroundProcessView( {state, dispatch} );
-  
   if (state.dvi && state.hsize) {
-    /*const dvi = state.dvi.get(stateToPathname(state));
-    console.log(dvi);*/
-    //if (dvi) {
     let rendered = render(state.dvi);
     let fullWidth = (document.body.clientWidth * 72 / 96);        
     let paddingLeft = (fullWidth - state.hsize) / 2.0;
@@ -145,7 +130,6 @@ export function view( {state, dispatch} : { state : State, dispatch : Dispatcher
                         "margin-bottom": "0.5in"}} class={{container:true}}>{ rendered }</div>;
   }
 
-  
   if (state.terminal) {
     if (state.terminal.length > 0) {
       let lines = state.terminal.toString().split("\n").filter( (line) => line !== '' );
@@ -153,11 +137,11 @@ export function view( {state, dispatch} : { state : State, dispatch : Dispatcher
       return <div class={{container:true, terminal:true}}>{ wrapped }</div>;
     }
   }
-  
 
-  return  <div class={{container:true}}>    
-    <p>Could not load DVI.</p>
-    </div>;
+  if (state.backgroundProcess)
+    return <div></div>;
+  
+  return <div class={{container:true}}><p>Could not load DVI.</p></div>;
 }
 
 let Page : Component = { view, init, update };

@@ -8,7 +8,11 @@ import Spinner from './spinner';
 import Page from './page';
 import {v4} from 'uuid';
 
-import { NavigationMessage } from './message';
+import { NavigationMessage, WrappedMessage } from './message';
+
+import { BackgroundProcess, BackgroundProcessComponent } from './background-process';
+const backgroundProcessView = BackgroundProcessComponent.view;
+const backgroundProcessUpdate = BackgroundProcessComponent.update;
 
 function findRoute( pathname : string, state : State, dispatch : Dispatcher ) : State {
   // FIXME: ugh this is such an ugly hack, and actually seems to fall
@@ -25,20 +29,32 @@ function findRoute( pathname : string, state : State, dispatch : Dispatcher ) : 
   }
   
   let r = new Route('/:owner/:repo/(*filename).tex');
-  if (r.match(pathname))
+  if (r.match(pathname)) {
+    let routeNonce = v4();
+    let wrappedDispatch : Dispatcher = function ( message : Message ) : void {
+      dispatch( new WrappedMessage( message, routeNonce ) );
+    };    
+
     return { ...ViewSource.init({...state,
                                  routeParams: r.match(pathname) },
-                                dispatch),
-             routeNonce: v4(),
+                                wrappedDispatch),
+             routeNonce,
              component: ViewSource };
+  }
 
   r = new Route('/:owner/:repo/(*filename)');
-  if (r.match(pathname))
+  if (r.match(pathname)) {
+    let routeNonce = v4();
+    let wrappedDispatch : Dispatcher = function ( message : Message ) : void {
+      dispatch( new WrappedMessage( message, routeNonce ) );
+    };
+    
     return {...Page.init({...state,
                           routeParams: r.match(pathname) },
-                         dispatch),
-            routeNonce: v4(),            
+                         wrappedDispatch),
+            routeNonce,
             component: Page };
+  }
 
   // No route found!
   return { ...state,
@@ -61,19 +77,38 @@ function ErrorComponent(text : string) : Component {
 }
 
 export function update( message : Message, state : State, dispatch : Dispatcher ) : State {
+  let newState = {...state,
+                  ...backgroundProcessUpdate( message, state, dispatch )};
+  
   if (message.type === 'error') {
-    return {...state, component: ErrorComponent(message.error) };
+    return {...newState, component: ErrorComponent(message.error) };
   }
   
   if (message.type === 'navigate-to') {
     return findRoute( message.path,
-                      {...state, dropdown: false, flashDanger: false}, dispatch );
+                      {...newState, dropdown: false, flashDanger: false}, dispatch );
   }
   
-  if (state && state.component) 
-    return state.component.update( message, state, dispatch );
+  if (newState && newState.component) {
+    let actualMessage : Message = message;
+    
+    if (message.type === 'wrapped-message') {
+      if (state.routeNonce) {
+        if (message.nonce === state.routeNonce) {
+          actualMessage = message.message;
+        } else {
+          // Ignore wrapped messages intended for a different route
+          return newState;
+        }
+      } else {
+        console.log('Missing route nonce for',message);
+      }
+    }
+    
+    return newState.component.update( actualMessage, newState, dispatch );
+  }
   
-  return state;
+  return newState;
 }
 
 export function init(state : State, dispatch : Dispatcher) : State {
@@ -88,10 +123,16 @@ function DisplayError(text) {
 }
 
 export function view( {state, dispatch} : { state : State, dispatch : Dispatcher } ): VNode {
+  let result = DisplayError('No route found.');
   if (state && state.component) 
-    return state.component.view( {state, dispatch} );
-  else
-    return DisplayError('No route found.');
+    result = state.component.view( {state, dispatch} );
+  
+  if (state.backgroundProcess)
+    return backgroundProcessView( {state,
+                                   dispatch,
+                                   background: result } );
+  
+  return result;
 }
 
 let Router : Component = { view, init, update };

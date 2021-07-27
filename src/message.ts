@@ -65,6 +65,11 @@ export class DoenetSavingMessage {
   constructor(public pathname : string ) {};
 }
 
+export class WrappedMessage {
+  type: "wrapped-message" = "wrapped-message";
+  constructor(public message : Message, public nonce : string ) {};
+}
+
 export class ErrorMessage {
   type: "error" = "error";
   constructor(public error : string ) {};
@@ -83,7 +88,8 @@ export type Message =
   SetDoenetScoreMessage |
   SetDoenetDatabaseMessage |
   SetDoenetShadowMessage |
-  DoenetSavingMessage |  
+  DoenetSavingMessage |
+  WrappedMessage |
   ErrorMessage;
 
 
