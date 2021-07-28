@@ -3,6 +3,7 @@
 import http from 'http';
 import express from 'express';
 import * as github from './github.js';
+import expressStaticGzip from "express-static-gzip";
 
 import dotenv from 'dotenv'
 dotenv.config();
@@ -21,12 +22,16 @@ let optionsStatic = {
   maxAge: 365 * 24 * 60 * 60 * 1000
 };
 
+
 // This is not hashed, but who cares if the favicon is immutable
 app.use('/favicon.ico', express.static(path.resolve(__dirname, '../public/favicon/favicon.ico'), optionsStatic ));
 
 app.get('/', function (request, response) {
   response.sendFile(path.resolve(__dirname, '../dist/index.html'));
 });
+
+app.use('/', expressStaticGzip(path.resolve(__dirname, '../dist'), { index: false,
+								     serveStatic: optionsStatic }));
 
 app.use(express.static(path.resolve(__dirname, '../dist'), optionsStatic ));
 

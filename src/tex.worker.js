@@ -20,45 +20,27 @@ var editor;
 let isRunning = false;
 
 async function load() {
-  if (!code) {
-    code = await localForage.getItem('tex');
-  }
+  //if (!code) {
+  //code = await localForage.getItem('tex');
+  //}
 
+  console.time("load2ing");
+  
   if (!code) {
-    let tex = await fetch(texBinaryPath);
+    let tex = await fetch(texBinaryPath, {cache: "force-cache"});
     postMessage({text: "."});
     code = await tex.arrayBuffer();
   }
 
-  if (!coredump)
-    coredump = await localForage.getItem('coredump');
-  
   compiled = new WebAssembly.Module(code);
   postMessage({text: "."});
 
-  console.log(compiled);
-  
   if (coredump)
     return coredump;
-  
-  let response = await fetchStream(texCorePath);
-  const reader = response.body.getReader();
-  const inf = new pako.Inflate();
-  
-  try {
-    while (true) {
-      const {done, value} = await reader.read();
-      inf.push(value, done);
-      postMessage({text: "."});      
-      if (done) break;
-    }
-  }
-  finally {
-    reader.releaseLock();
-  }
 
-  coredump = new Uint8Array( inf.result, 0, pages*65536 );
-  localForage.setItem('coredump', coredump);
+  // This is assuming the server can serve this file
+  let response = await fetch(texCorePath.replace(/.gz$/,''), {cache: "force-cache"});
+  coredump = new Uint8Array( await response.arrayBuffer() );
   
   return coredump;
 }

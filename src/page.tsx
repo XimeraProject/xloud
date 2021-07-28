@@ -121,7 +121,7 @@ export function init( state : State, dispatch ) : State {
 export function view( {state, dispatch} : { state : State, dispatch : Dispatcher } ): VNode {
   if (state.dvi && state.hsize) {
     let rendered = render(state.dvi);
-    let fullWidth = (document.body.clientWidth * 72 / 96);        
+    let fullWidth = (document.body.clientWidth * 72 / 96);
     let paddingLeft = (fullWidth - state.hsize) / 2.0;
     return <div style={{"margin-right": "0in",
                         "margin-left":"0in",
