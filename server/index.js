@@ -26,20 +26,22 @@ let optionsStatic = {
 // This is not hashed, but who cares if the favicon is immutable
 app.use('/favicon.ico', express.static(path.resolve(__dirname, '../public/favicon/favicon.ico'), optionsStatic ));
 
+// FIXME: how should this be cached?
+app.use('/local-texmf', express.static(path.resolve(__dirname, '../local-texmf')));
+
 app.get('/', function (request, response) {
   response.sendFile(path.resolve(__dirname, '../dist/index.html'));
 });
 
+/*
 app.use('/', expressStaticGzip(path.resolve(__dirname, '../dist'), { index: false,
 								     serveStatic: optionsStatic }));
+*/
 
 app.use(express.static(path.resolve(__dirname, '../dist'), optionsStatic ));
 
 app.use(`/${process.env.TEXLIVE_VERSION}/texmf`,
 	express.static(process.env.TEXMF, optionsStatic) );
-
-// FIXME: how should this be cached?
-app.use('/local-texmf', express.static(path.resolve(__dirname, '../local-texmf')));
 
 // FIXME: get repo information
 app.get('/github/:owner/:repo.json', github.findRepository, github.getRepository );

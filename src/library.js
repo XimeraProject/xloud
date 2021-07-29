@@ -149,8 +149,10 @@ export function readFileSync(filename) {
 let texmf = {};
 
 async function openFromGithub( filename, mode ) {
+  console.log('github',urlRoot,filename);
   let resolved = path.resolve( path.dirname(urlRoot), filename );
-
+  console.log('github resolved',resolved);
+  
   const request = new Request(resolved);
   const response = await fetch(request);
   

@@ -113,6 +113,7 @@ export function init( state : State, dispatch ) : State {
           backgroundProcess: new BackgroundProcess('Fetching repository'),
           repository: undefined,
           dvi: undefined,
+          terminal: undefined,
           texFilename: `${params.filename}.tex`,
           viewingSource: false
          };

@@ -1,12 +1,6 @@
-import texCorePath from '../tex/core.ee6d2813340d.dump.gz';
+import texCorePath from '../tex/core.1dd006831634.dump.gz';
 import texBinaryPath from '../tex/out.65aa873359a6.wasm';
 import * as library from './library.js';
-
-import pako from 'pako';
-import { ReadableStream } from "web-streams-polyfill";
-import fetchStream from 'fetch-readablestream';
-
-import * as localForage from "localforage";
 
 let pages = 2500;
 
@@ -17,32 +11,69 @@ let compiled;
 var theTerminal;
 var editor;
 
+import pako from 'pako';
+import { ReadableStream } from "web-streams-polyfill";
+import fetchStream from 'fetch-readablestream';
+
 let isRunning = false;
 
 async function load() {
-  //if (!code) {
-  //code = await localForage.getItem('tex');
-  //}
-
-  console.time("load2ing");
-  
   if (!code) {
     let tex = await fetch(texBinaryPath, {cache: "force-cache"});
     postMessage({text: "."});
     code = await tex.arrayBuffer();
   }
 
+  /*
+  const codeDigest = await crypto.subtle.digest('SHA-256', code);
+  const hashArray = Array.from(new Uint8Array(codeDigest));                     // convert buffer to byte array
+  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join(''); // convert bytes to hex string
+  console.log('sha256(code)=',hashHex);
+  */
+  
   compiled = new WebAssembly.Module(code);
   postMessage({text: "."});
 
+  // This is assuming the server can serve this file as a static gzip
+  // comprssed asset.  My timings suggest this is about a third faster
+  // than using pako and fetchStream.
+  /*
+  if (!coredump) {  
+    let response = await fetch(texCorePath.replace(/.gz$/,''));
+   //                            {cache: "force-cache"});
+    coredump = new Uint8Array( await response.arrayBuffer() );
+  }
+  */
+
   if (coredump)
     return coredump;
+  
+  let response = await fetchStream(texCorePath);
+  const reader = response.body.getReader();
+  const inf = new pako.Inflate();
+  
+  try {
+    while (true) {
+      const {done, value} = await reader.read();
+      inf.push(value, done);
+      postMessage({text: "."});      
+      if (done) break;
+    }
+  }
+  finally {
+    reader.releaseLock();
+  }
 
-  // This is assuming the server can serve this file
-  let response = await fetch(texCorePath.replace(/.gz$/,''), {cache: "force-cache"});
-  coredump = new Uint8Array( await response.arrayBuffer() );
+  coredump = new Uint8Array( inf.result, 0, pages*65536 );
   
   return coredump;
+
+  /*
+  const digest = await crypto.subtle.digest('SHA-256', coredump);
+  const hashArray2 = Array.from(new Uint8Array(digest));                     // convert buffer to byte array
+  const hashHex2 = hashArray2.map(b => b.toString(16).padStart(2, '0')).join(''); // convert bytes to hex string
+  console.log('sha256(dump)=',hashHex2);  
+  */
 }
 
 function copy(src)  {
@@ -105,6 +136,7 @@ async function compile(callback) {
 
 function fetchInput(url) {
   return new Promise( function(resolve,reject) {
+    console.log('fetching from',url);
     fetch(url)
       .then((response) => {
         if (!response.ok) {
