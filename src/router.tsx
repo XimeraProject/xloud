@@ -81,7 +81,9 @@ export function update( message : Message, state : State, dispatch : Dispatcher 
                   ...backgroundProcessUpdate( message, state, dispatch )};
   
   if (message.type === 'error') {
-    return {...newState, component: ErrorComponent(message.error) };
+    return {...newState,
+            backgroundProcess: undefined,
+            component: ErrorComponent(message.error) };
   }
   
   if (message.type === 'navigate-to') {
@@ -90,12 +92,10 @@ export function update( message : Message, state : State, dispatch : Dispatcher 
   }
   
   if (newState && newState.component) {
-    let actualMessage : Message = message;
-    
     if (message.type === 'wrapped-message') {
       if (state.routeNonce) {
         if (message.nonce === state.routeNonce) {
-          actualMessage = message.message;
+          return update( message.message, state, dispatch );
         } else {
           // Ignore wrapped messages intended for a different route
           return newState;
@@ -105,7 +105,7 @@ export function update( message : Message, state : State, dispatch : Dispatcher 
       }
     }
     
-    return newState.component.update( actualMessage, newState, dispatch );
+    return newState.component.update( message, newState, dispatch );
   }
   
   return newState;

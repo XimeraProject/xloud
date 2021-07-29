@@ -1,5 +1,5 @@
-import texCorePath from '../tex/core.01d423803cbb.dump.gz';
-import texBinaryPath from '../tex/out.65aa873359a6.wasm';
+import texCorePath from '../tex/core.9dd42e8422d7.dump.gz';
+import texBinaryPath from '../tex/out.2b1a55ec9654.wasm';
 import * as library from './library.js';
 
 let pages = 2500;
@@ -19,7 +19,8 @@ let isRunning = false;
 
 async function load() {
   if (!code) {
-    let tex = await fetch(texBinaryPath, {cache: "force-cache"});
+    //let tex = await fetch(texBinaryPath, {cache: "force-cache"});
+    let tex = await fetch(texBinaryPath);
     postMessage({text: "."});
     code = await tex.arrayBuffer();
   }
@@ -170,33 +171,37 @@ async function firstTime(e) {
   if (isRunning) return;
   
   let url = e.data.url;
-  let source = await fetchInput(url);
+  try {
+    let source = await fetchInput(url);
 
-  // FIXME: should kill the backups too
-  library.deleteEverything();
-  library.setUrlRoot(url);
-  library.setTexput(source);
-  library.setTexputAux(new Uint8Array());
+    // FIXME: should kill the backups too
+    library.deleteEverything();
+    library.setUrlRoot(url);
+    library.setTexput(source);
+    library.setTexputAux(new Uint8Array());
   
-  library.setConsoleWriter((x) => {
-    postMessage({text: x});
-  });
+    library.setConsoleWriter((x) => {
+      postMessage({text: x});
+    });
 
-  isRunning = true;
-  compile( function (err, dvi) {
-    isRunning = false;
-    if (err) {
-    } else {
-      library.setCallback(() => {
-        isRunning = false;        
-        const data = library.readFileSync('texput.dvi');
-        const aux = library.readFileSync('texput.aux');
-        postMessage({dvi: data.buffer, hsize: library.getHsize()});
-      });
-      isRunning = true;
-      library.resurrect();
-    }
-  });
+    isRunning = true;
+    compile( function (err, dvi) {
+      isRunning = false;
+      if (err) {
+      } else {
+        library.setCallback(() => {
+          isRunning = false;        
+          const data = library.readFileSync('texput.dvi');
+          const aux = library.readFileSync('texput.aux');
+          postMessage({dvi: data.buffer, hsize: library.getHsize()});
+        });
+        isRunning = true;
+        library.resurrect();
+      }
+    });
+  } catch (err) {
+    postMessage({error: err});
+  }
 }
 
 onmessage = async function(e) {

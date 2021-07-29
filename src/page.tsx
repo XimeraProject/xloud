@@ -6,7 +6,7 @@ let texWorker = new Worker();
 import { render } from './dvi';
 
 import { Message, State, Dispatcher, Component } from './tea';
-import { TerminalLogMessage, SetDviMessage } from './message';
+import { TerminalLogMessage, SetDviMessage, ErrorMessage } from './message';
 
 import { stateToPathname } from './state';
 
@@ -99,13 +99,17 @@ export function init( state : State, dispatch ) : State {
   requestRepository( params.owner, params.repo, dispatch );
 
   texWorker.onmessage = function (event) {
-    if (event.data.text) {
-      dispatch( new TerminalLogMessage(event.data.text) );
-    }
+    if (event.data.error) {
+      dispatch(new ErrorMessage(event.data.error));
+    } else {
+      if (event.data.text) {
+        dispatch( new TerminalLogMessage(event.data.text) );
+      }
     
-    if (event.data.dvi) {
-      dispatch( new SetDviMessage(event.data.dvi,
-                                  event.data.hsize) );
+      if (event.data.dvi) {
+        dispatch( new SetDviMessage(event.data.dvi,
+                                    event.data.hsize) );
+      }
     }
   };
   
