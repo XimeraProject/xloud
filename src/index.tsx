@@ -20,6 +20,22 @@ console.log('This is\n%c ',
 console.log(`version ${version}`);
 
 ////////////////////////////////////////////////////////////////
+import localForage from "localforage";
+
+localForage.config();
+  
+localForage.getItem('VERSION').then(function(cacheVersion) {
+  if (cacheVersion !== version) {
+    localForage.clear().then( () => {
+      localForage.setItem('VERSION',version);
+      console.log(`Clearing localForage to upgrade from ${cacheVersion} to ${version}`);
+    });
+  } else {
+    console.log(`Relying on localForage cache for version ${cacheVersion}`);
+  }
+}).catch(console.error);
+
+////////////////////////////////////////////////////////////////
 // my riff on the elm architecture, via snabbdom
 import { jsx, VNode } from "snabbdom";
 

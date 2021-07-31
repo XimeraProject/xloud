@@ -1,4 +1,4 @@
-import texCorePath from '../tex/core.9dd42e8422d7.dump.gz';
+import texCorePath from '../tex/core.c3baf1282bc6.dump.gz';
 import texBinaryPath from '../tex/out.2b1a55ec9654.wasm';
 import * as library from './library.js';
 
@@ -15,36 +15,29 @@ import pako from 'pako';
 import { ReadableStream } from "web-streams-polyfill";
 import fetchStream from 'fetch-readablestream';
 
+import localForage from "localforage";
+localForage.config();
+
 let isRunning = false;
 
 async function load() {
   if (!code) {
-    //let tex = await fetch(texBinaryPath, {cache: "force-cache"});
+    code = await localForage.getItem(texBinaryPath);
+  }
+  
+  if (!code) {
     let tex = await fetch(texBinaryPath);
     postMessage({text: "."});
     code = await tex.arrayBuffer();
+    localForage.setItem(texBinaryPath, code);    
   }
 
-  /*
-  const codeDigest = await crypto.subtle.digest('SHA-256', code);
-  const hashArray = Array.from(new Uint8Array(codeDigest));                     // convert buffer to byte array
-  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join(''); // convert bytes to hex string
-  console.log('sha256(code)=',hashHex);
-  */
-  
   compiled = new WebAssembly.Module(code);
   postMessage({text: "."});
 
-  // This is assuming the server can serve this file as a static gzip
-  // comprssed asset.  My timings suggest this is about a third faster
-  // than using pako and fetchStream.
-  /*
-  if (!coredump) {  
-    let response = await fetch(texCorePath.replace(/.gz$/,''));
-   //                            {cache: "force-cache"});
-    coredump = new Uint8Array( await response.arrayBuffer() );
-  }
-  */
+  if (!coredump) {
+    coredump = await localForage.getItem(texCorePath);
+  }  
 
   if (coredump)
     return coredump;
@@ -66,6 +59,7 @@ async function load() {
   }
 
   coredump = new Uint8Array( inf.result, 0, pages*65536 );
+  localForage.setItem(texCorePath, coredump);
   
   return coredump;
 
@@ -97,7 +91,6 @@ async function compile(callback) {
   const memoryBackup = new WebAssembly.Memory({ initial: pages, maximum: pages });    
   library.setMemoryBackup(memoryBackup.buffer);
   
-  console.log( 'TEXLIVE', process.env.TEXLIVE_VERSION );
   library.setTexliveVersion( process.env.TEXLIVE_VERSION );
   
   postMessage({text: "Copied!\n"});
@@ -108,9 +101,13 @@ async function compile(callback) {
   library.setCallback(() => {
     const filename = 'texput.dvi';
     console.log('Trying to read output...');
-    const data = library.readFileSync('texput.dvi');
-    const aux = library.readFileSync('texput.aux');
-    callback( null, data.buffer );
+    try {
+      const data = library.readFileSync('texput.dvi');
+      const aux = library.readFileSync('texput.aux');
+      callback( null, data.buffer );
+    } catch (err) {
+      callback( err );      
+    }
   });
   
   let instance;
@@ -188,9 +185,10 @@ async function firstTime(e) {
     compile( function (err, dvi) {
       isRunning = false;
       if (err) {
+        postMessage({dvi: new Uint8Array(), hsize: library.getHsize()});
       } else {
         library.setCallback(() => {
-          isRunning = false;        
+          isRunning = false;
           const data = library.readFileSync('texput.dvi');
           const aux = library.readFileSync('texput.aux');
           postMessage({dvi: data.buffer, hsize: library.getHsize()});

@@ -17,8 +17,21 @@ function ximeraRuleHandler( data : string ) : VNode[] {
   }
 
   if (kind === 'answer') {
-    return [h('input', { style: { width: "100%", height: "100%" }})];
+    //return [h('input', { style: { width: "100%", height: "100%" }})];
+    return [h('div', { class: {'input-group': true}, style: { width: "100%", height: "100%" }},
+              [h('input', { class: {'form-control': true}, style: {'padding': '2pt'}}),
+               h('button', { attrs: {type: 'button'}, class: {'btn': true, 'btn-outline-secondary': true}},
+                 ['?']
+                )]
+             )];
   }
+
+  // <div class="input-group mb-3">
+  //  <input type="text" class="form-control" placeholder="Recipient's username" aria-label="Recipient's username" aria-describedby="basic-addon2">
+    //<div class="input-group-append">
+    //<button class="btn btn-outline-secondary" type="button">Button</button>
+  //</div>
+  //</div>
   
   return [h('div', {}, data )];
 }

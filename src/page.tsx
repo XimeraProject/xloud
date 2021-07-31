@@ -125,14 +125,17 @@ export function init( state : State, dispatch ) : State {
 
 export function view( {state, dispatch} : { state : State, dispatch : Dispatcher } ): VNode {
   if (state.dvi && state.hsize) {
-    let rendered = render(state.dvi);
-    let fullWidth = (document.body.clientWidth * 72 / 96);
-    let paddingLeft = (fullWidth - state.hsize) / 2.0;
-    return <div style={{"margin-right": "0in",
-                        "margin-left":"0in",
-                        "margin-top":"0.25in",
-                        "padding-left": `${paddingLeft}pt`,
-                        "margin-bottom": "0.5in"}} class={{container:true}}>{ rendered }</div>;
+    console.log('state.dvi=',state.dvi);
+    if (state.dvi.byteLength != 0) {
+      let rendered = render(state.dvi);
+      let fullWidth = (document.body.clientWidth * 72 / 96);
+      let paddingLeft = (fullWidth - state.hsize) / 2.0;
+      return <div style={{"margin-right": "0in",
+                          "margin-left":"0in",
+                          "margin-top":"0.25in",
+                          "padding-left": `${paddingLeft}pt`,
+                          "margin-bottom": "0.5in"}} class={{container:true}}>{ rendered }</div>;
+    }
   }
 
   if (state.terminal) {

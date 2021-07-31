@@ -185,6 +185,7 @@ async function openFromGithub( filename, mode ) {
 
 let sleeping = false;
 let snapshotting = false;
+let snapshotted = false;
 
 function openSync(filename, mode) {
   console.log('attempting to open', filename, 'in mode', mode);
@@ -674,6 +675,11 @@ let windingBackup;
 let stackPointer = 0;
 
 export function resurrect() {
+  if (!snapshotted) {
+    console.log('nothing to resurrect');    
+    return;
+  }
+  
   console.log('attempting to resurrect');
   var uint32View = new Uint32Array(memoryBackup);
 
@@ -695,6 +701,7 @@ export function resurrect() {
 
 export function snapshot() {
   console.log('in snapshot');
+  snapshotted = true;
   
   if (!snapshotting) {
     console.log('starting unwind');
