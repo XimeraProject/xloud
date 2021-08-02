@@ -38,14 +38,15 @@ export default function(data : string, block : any, state : any, update : (( val
               v : ev.target.value } );
   };    
 
-  let control = <input props={{value}} class={{'form-control': true}} on={{input}} style={{'padding': '2pt'}}/>;
-
+  block.needsResponse = true;
+  
   let classes : any = {'btn-primary': true};
   let label = 'question';
 
   if (state['c']) {
     classes = {'btn-success': true};
-    label = 'check';    
+    label = 'check';
+    block.correctResponse = true;
   }
 
   if (state['c'] === false) {
@@ -54,6 +55,8 @@ export default function(data : string, block : any, state : any, update : (( val
       label = 'times';
     }
   }
+
+  let control = <input props={{value}} class={{'form-control': true}} attrs={{'disabled': classes['btn-success']===true}} on={{input}} style={{'padding': '2pt'}}/>;  
   
   let button = <button on={{click}} class={{...classes, 'btn': true}} attrs={{type: 'button'}}>
       <Icon fa={label}/>

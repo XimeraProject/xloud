@@ -1,6 +1,6 @@
 {
   "name": "@ximera/xloud",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "Decentralized content viewer for Ximera",
   "main": "src/index.js",
   "bin": "server/index.js",

@@ -24,6 +24,9 @@ class XimeraEnvironment implements XimeraBlock {
   id : string = '';
   children : XimeraBlock[] = [];  
   parent : XimeraBlock | undefined;
+
+  needsResponse : boolean = false;
+  correctResponse : boolean = false;
   
   constructor(public name : string ) {};
 
@@ -35,7 +38,14 @@ class XimeraEnvironment implements XimeraBlock {
 
   render() : VNode[] {
     let flattened = this.children.map( (x) => x.render() ).flat();
-    return [h('div', {style: {}}, flattened)];
+
+    // The root always reveals all its children
+    if (this.id === '')
+      return [h('div', {style: {}}, flattened)];
+
+    
+    
+    return [h('div', {style: {}}, flattened)];    
   }
 }
 
@@ -43,6 +53,9 @@ class XimeraPage implements XimeraBlock {
   type: "page" = "page";
   parent : XimeraBlock | undefined;
   id : string = '';
+
+  needsResponse : boolean = false;
+  correctResponse : boolean = false;  
   
   constructor(public page : VNode ) {};
 
@@ -57,6 +70,9 @@ class XimeraRule implements XimeraBlock {
   type: "rule" = "rule";
   parent : XimeraBlock | undefined;
   id : string = '';
+
+  needsResponse : boolean = false;
+  correctResponse : boolean = false;
   
   constructor(public kind : string, public data : string ) {};
 
