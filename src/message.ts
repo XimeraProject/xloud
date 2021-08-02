@@ -55,6 +55,11 @@ export class SetDoenetDatabaseMessage {
   constructor(public db : any, public pathname : string ) {};
 }
 
+export class PatchDoenetDatabaseMessage {
+  type: "patch-doenet-database" = "patch-doenet-database";
+  constructor(public pathname : string, public key : string, public value : any ) {};
+}
+
 export class SetDoenetShadowMessage {
   type: "set-doenet-shadow" = "set-doenet-shadow";
   constructor(public db : any, public pathname : string ) {};
@@ -86,6 +91,7 @@ export type Message =
   DoenetDisconnectMessage |
   SetDoenetTokenMessage |
   SetDoenetScoreMessage |
+  PatchDoenetDatabaseMessage |  
   SetDoenetDatabaseMessage |
   SetDoenetShadowMessage |
   DoenetSavingMessage |

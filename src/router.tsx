@@ -8,6 +8,8 @@ import Spinner from './spinner';
 import Page from './page';
 import {v4} from 'uuid';
 
+import navbar from './navbar';
+
 import { NavigationMessage, WrappedMessage } from './message';
 
 import { BackgroundProcess, BackgroundProcessComponent } from './background-process';
@@ -95,11 +97,15 @@ export function update( message : Message, state : State, dispatch : Dispatcher 
     if (message.type === 'wrapped-message') {
       if (state.routeNonce) {
         if (message.nonce === state.routeNonce) {
-          return update( message.message, state, dispatch );
-        } else {
-          // Ignore wrapped messages intended for a different route
-          return newState;
-        }
+          //return update( message.message, newState, dispatch );
+          return navbar.update( message.message,
+                                update( message.message, newState, dispatch ),
+                                dispatch );
+          // perhaps somewhat confusingly, one cannot call dispatch from update.
+          //dispatch( message.message );
+        } 
+        // Ignore wrapped messages intended for a different route
+        return newState;
       } else {
         console.log('Missing route nonce for',message);
       }

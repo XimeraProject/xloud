@@ -5,7 +5,7 @@ import { BackgroundProcess } from './background-process';
 
 export default interface State {
   time ?: Date;
-  
+
   routeNonce?: string;
   
   backgroundProcess ?: BackgroundProcess;
@@ -42,8 +42,9 @@ export default interface State {
 }
 
 export function stateToPathname( state : State ) : string {
-  if (state.repository && state.repository.owner && state.repository.name && state.texFilename)
-    return `/${state.repository.owner}/${state.repository.name}/${state.texFilename}`;
+  if (state.repository && state.repository.owner && state.repository.owner.login &&
+      state.repository.name && state.texFilename)
+    return `/${state.repository.owner.login}/${state.repository.name}/${state.texFilename}`;
 
   return '';
 }

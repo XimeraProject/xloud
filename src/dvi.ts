@@ -1,70 +1,139 @@
 import { dvi2vdom } from 'dvi2html';
 import './fonts/tex/tex.css';
 
+import { Message, State, Dispatcher, Component } from './tea';
+import { stateToPathname } from './state';
+import { PatchDoenetDatabaseMessage } from './message';
+
 import { h, VNode } from 'snabbdom'; // helper function for creating vnodes
 import { Buffer } from 'buffer';
 
-function ximeraRuleHandler( data : string ) : VNode[] {
-  let kind = data.split(' ')[0];
-  let payload = data.split(' ')[1];  
+import Icon from './icon';
 
-  if (kind === 'youtube') {
-    return [h('iframe', { attrs: { width: "100%", height: "100%",
-                                   frameborder: "0",
-                                   allowfullscreen: true,
-                                   src: `https://www.youtube.com/embed/${payload}`} }
-             )];
-  }
-
-  if (kind === 'answer') {
-    //return [h('input', { style: { width: "100%", height: "100%" }})];
-    return [h('div', { class: {'input-group': true}, style: { width: "100%", height: "100%" }},
-              [h('input', { class: {'form-control': true}, style: {'padding': '2pt'}}),
-               h('button', { attrs: {type: 'button'}, class: {'btn': true, 'btn-outline-secondary': true}},
-                 ['?']
-                )]
-             )];
-  }
-
-  // <div class="input-group mb-3">
-  //  <input type="text" class="form-control" placeholder="Recipient's username" aria-label="Recipient's username" aria-describedby="basic-addon2">
-    //<div class="input-group-append">
-    //<button class="btn btn-outline-secondary" type="button">Button</button>
-  //</div>
-  //</div>
+interface XimeraBlock {
+  type: string;
+  id: string;
+  render(): VNode[];
   
+  parent: XimeraBlock | undefined;
+  push( child : XimeraBlock ) : void;
+}
+
+class XimeraEnvironment implements XimeraBlock {
+  type: "environment" = "environment";
+  id : string = '';
+  children : XimeraBlock[] = [];  
+  parent : XimeraBlock | undefined;
+  
+  constructor(public name : string ) {};
+
+  push( child : XimeraBlock ) : void {
+    child.parent = this;
+    child.id = `${this.id}/${this.children.length}`;
+    this.children.push( child );
+  }
+
+  render() : VNode[] {
+    let flattened = this.children.map( (x) => x.render() ).flat();
+    return [h('div', {style: {}}, flattened)];
+  }
+}
+
+class XimeraPage implements XimeraBlock {
+  type: "page" = "page";
+  parent : XimeraBlock | undefined;
+  id : string = '';
+  
+  constructor(public page : VNode ) {};
+
+  push( child : XimeraBlock ) : void {}
+
+  render() : VNode[] {
+    return [this.page];
+  }
+}
+
+class XimeraRule implements XimeraBlock {
+  type: "rule" = "rule";
+  parent : XimeraBlock | undefined;
+  id : string = '';
+  
+  constructor(public kind : string, public data : string ) {};
+
+  push( child : XimeraBlock ) : void {}
+
+  render() : VNode[] { return []; }
+}
+
+let rootBlock : XimeraBlock = new XimeraEnvironment('root');
+let blockStack : XimeraBlock[] = [];
+
+function ximeraPushHandler( data : string ) {
+  let block = new XimeraEnvironment(data);
+  blockStack[0].push( block );
+  blockStack.unshift( block );
+}
+
+function ximeraPopHandler() {
+  blockStack.shift();
+}
+
+import youtube from './rules/youtube.tsx';
+import answer from './rules/answer.tsx';
+
+let handlers = {
+  youtube,
+  answer,
+};
+
+function ximeraRuleHandler( data : string, state : State, dispatch : Dispatcher ) : VNode[] {
+  let kind = data.split(' ')[0];
+  let payload = data.split(' ').slice(1).join(' ');
+
+  // add this rule to the blockstack
+  let block = new XimeraRule(kind, payload);
+  blockStack[0].push( block );
+
+  const pathname = stateToPathname(state);
+  let db = state.databases?.get(pathname);
+  
+  if (kind in handlers) {
+    let localState = {};
+    
+    if (db && db[block.id]) {
+      localState = db[block.id];
+    }
+
+    const update = function(value : any) : void {
+      dispatch( new PatchDoenetDatabaseMessage( pathname, block.id, value ) );
+    };
+    
+    return [handlers[kind](payload, block, localState, update)];
+  }
+
   return [h('div', {}, data )];
 }
 
-export function render(dvi) {
-  let vdoms = [] as any;
-
-  // This fixes how snabbdom handles svg
-  const myCreateElement = function (tagName, options, children) {
-    if (options && options.props && options.props.innerHTML) {
-      return h(tagName,
-	       {
-		 ...options,
-		 domProps: options.props, 
-	       },
-	       children);
-    } 
-    return h(tagName, options, children);
-    
-  };
-
+export function render(dvi, state : State, dispatch : Dispatcher) {
   let buffer = new Buffer(dvi);
 
-  let result = dvi2vdom(buffer, h,
-                        ximeraRuleHandler,
-	   (vdom) => {
-	     vdoms.push(vdom);
-	   });
-
-  console.log('result=',result);
+  rootBlock = new XimeraEnvironment('root');
+  blockStack = [rootBlock];
   
-  let root = h('div', { class: { tex: true } }, vdoms);
+  let result = dvi2vdom(buffer, h,
+                        (data : string) => ximeraRuleHandler(data, state, dispatch),
+                        ximeraPushHandler,
+                        ximeraPopHandler,
+	                (vdom : VNode) => {
+                          blockStack[0].push(new XimeraPage(vdom));
+	                });
+
+  let root = h('div', { class: { tex: true } }, rootBlock.render());
   let root2 = h('div', { class: { desktop: true } }, [root]);
+
+  console.log(rootBlock);
+  console.log(state.databases);
+  console.log(state);
   
   return root2;
 }

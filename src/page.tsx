@@ -127,7 +127,7 @@ export function view( {state, dispatch} : { state : State, dispatch : Dispatcher
   if (state.dvi && state.hsize) {
     console.log('state.dvi=',state.dvi);
     if (state.dvi.byteLength != 0) {
-      let rendered = render(state.dvi);
+      let rendered = render(state.dvi, state, dispatch);
       let fullWidth = (document.body.clientWidth * 72 / 96);
       let paddingLeft = (fullWidth - state.hsize) / 2.0;
       return <div style={{"margin-right": "0in",

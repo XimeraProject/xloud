@@ -76,21 +76,12 @@ async function requestDatabase(state : State, dispatch : Dispatcher): Promise<vo
 }
 
 export function update( message : Message, state : State, dispatch : Dispatcher ) : State {
-  (window as any).putTheDatabase = function(s) {
-    putDatabase(state, dispatch, s);
-  };
-
-  (window as any).saveTheDatabase = function(s) {
-    saveDatabase(state, dispatch);
-  };    
-  
   if (message.type === 'set-doenet-token') {
-    if (state.repository && state.texFilename) {
-      requestDatabase( state, dispatch );
-    }
+    return {...state,
+            doenetToken: message.token};
   }
 
-  if (message.type === 'navigate-to') {
+  if (message.type === 'set-repository') {
     if (state.repository && state.texFilename && state.doenetToken) {
       requestDatabase( state, dispatch );
     }
@@ -106,6 +97,20 @@ export function update( message : Message, state : State, dispatch : Dispatcher 
       
     return result;
   }
+
+  if (message.type === 'patch-doenet-database') {
+    let result = {...state};
+      
+    if (result.databases === undefined)
+      result.databases = new Map();
+
+    let db = {...state.databases?.get(message.pathname)};
+    db[message.key] = message.value;
+    
+    result.databases.set(message.pathname, JSON.parse(JSON.stringify(db)));
+
+    return result;
+  }  
 
   if (message.type === 'doenet-saving') {
     let result = {...state};
