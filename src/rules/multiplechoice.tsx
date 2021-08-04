@@ -22,7 +22,7 @@ export default function(data : string, block : any, options : any, children : VN
     }
   };
   
-  let button = <button on={{click}} style={{...options.style}} class={{'btn-outline-secondary':true, 'btn': true}} attrs={{type: 'button'}}>{ children }</button>;
+  let button = <button on={{click}} style={{...options.style}} class={{'btn-outline-secondary':true, 'btn': true}} attrs={{'disabled': disabled, type: 'button'}}>{ children }</button>;
 
   if (value === block.id) {
     button = <button on={{click}} style={{...options.style}} class={{'btn-secondary':true, 'btn': true}} attrs={{'disabled': disabled, type: 'button'}}>{ children }</button>;
