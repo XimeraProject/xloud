@@ -4,15 +4,11 @@ import Icon from '../icon';
 
 import MathExpression from 'math-expressions/lib/math-expressions.js';
 
-// btn-primary with question
-// btn-danger with times
-// btn-success with check
-
-export default function(data : string, block : any, state : any, update : (( value : any ) => void) ) : VNode {
+export default function(data : string, block : any, options : any, _children : VNode[]) : VNode {
   let value = '';
 
-  if (state['v'])
-    value = state['v'];
+  if (block.db['v'])
+    value = block.db['v'];
 
   let answer = MathExpression.fromText(data);  
   
@@ -20,13 +16,13 @@ export default function(data : string, block : any, state : any, update : (( val
     try {
       let response = MathExpression.fromText(value);
       if (answer.equals( response )) {
-        update( { ...state,
-                  r: value,
-                  c: true } );        
+        block.update( { ...block.db,
+                        r: value,
+                        c: true } );        
       } else {
-        update( { ...state,
-                  r: value,                  
-                  c: false } );
+        block.update( { ...block.db,
+                        r: value,                  
+                        c: false } );
       }
     } catch (err) {
       // FIXME: do something 
@@ -34,8 +30,8 @@ export default function(data : string, block : any, state : any, update : (( val
   };
 
   const input = function(ev) {
-    update( { ...state,
-              v : ev.target.value } );
+    block.update( { ...block.db,
+                    v : ev.target.value } );
   };    
 
   block.needsResponse = true;
@@ -43,14 +39,14 @@ export default function(data : string, block : any, state : any, update : (( val
   let classes : any = {'btn-primary': true};
   let label = 'question';
 
-  if (state['c']) {
+  if (block.db['c']) {
     classes = {'btn-success': true};
     label = 'check';
     block.correctResponse = true;
   }
 
-  if (state['c'] === false) {
-    if (value === state['r']) {
+  if (block.db['c'] === false) {
+    if (value === block.db['r']) {
       classes = {'btn-danger': true};
       label = 'times';
     }
@@ -62,5 +58,5 @@ export default function(data : string, block : any, state : any, update : (( val
       <Icon fa={label}/>
       </button>;
   
-  return <div class={{'input-group': true}} style={{ width: "100%", height: "100%" }}>{ control }{ button }</div>;
+  return <div class={{'input-group': true}} style={{...options.style}}>{ control }{ button }</div>;
 }

@@ -25,6 +25,9 @@ class XimeraEnvironment implements XimeraBlock {
   children : XimeraBlock[] = [];  
   parent : XimeraBlock | undefined;
 
+  db : any;
+  update( value : any ) : void {}
+  
   needsResponse : boolean = false;
   correctResponse : boolean = false;
   
@@ -54,6 +57,9 @@ class XimeraPage implements XimeraBlock {
   parent : XimeraBlock | undefined;
   id : string = '';
 
+  db : any;
+  update( value : any ) : void {}    
+  
   needsResponse : boolean = false;
   correctResponse : boolean = false;  
   
@@ -71,6 +77,9 @@ class XimeraRule implements XimeraBlock {
   parent : XimeraBlock | undefined;
   id : string = '';
 
+  db : any;
+  update( value : any ) : void {}  
+
   needsResponse : boolean = false;
   correctResponse : boolean = false;
   
@@ -84,10 +93,23 @@ class XimeraRule implements XimeraBlock {
 let rootBlock : XimeraBlock = new XimeraEnvironment('root');
 let blockStack : XimeraBlock[] = [];
 
-function ximeraPushHandler( data : string ) {
+function ximeraPushHandler( data : string, state : State, dispatch : Dispatcher ) {
   let block = new XimeraEnvironment(data);
   blockStack[0].push( block );
   blockStack.unshift( block );
+
+  const pathname = stateToPathname(state);
+  let db = state.databases?.get(pathname);
+
+  block.db = {};
+    
+  if (db && db[block.id]) {
+    block.db = db[block.id];
+  }
+
+  block.update = function(value : any) : void {
+    dispatch( new PatchDoenetDatabaseMessage( pathname, block.id, value ) );
+  };
 }
 
 function ximeraPopHandler() {
@@ -96,38 +118,46 @@ function ximeraPopHandler() {
 
 import youtube from './rules/youtube.tsx';
 import answer from './rules/answer.tsx';
+import freeresponse from './rules/freeresponse.tsx';
+import multiplechoice from './rules/multiplechoice.tsx';
+import checkwork from './rules/checkwork.tsx';
 
 let handlers = {
   youtube,
   answer,
+  multiplechoice,
+  freeresponse,
+  checkwork,
 };
 
-function ximeraRuleHandler( data : string, state : State, dispatch : Dispatcher ) : VNode[] {
+function ximeraRuleHandler( data : string, options : any, children : VNode[], state : State, dispatch : Dispatcher ) : VNode {
   let kind = data.split(' ')[0];
   let payload = data.split(' ').slice(1).join(' ');
 
+  console.log(data,children);
+  
   // add this rule to the blockstack
   let block = new XimeraRule(kind, payload);
   blockStack[0].push( block );
 
   const pathname = stateToPathname(state);
   let db = state.databases?.get(pathname);
-  
-  if (kind in handlers) {
-    let localState = {};
-    
-    if (db && db[block.id]) {
-      localState = db[block.id];
-    }
 
-    const update = function(value : any) : void {
-      dispatch( new PatchDoenetDatabaseMessage( pathname, block.id, value ) );
-    };
+  block.db = {};
     
-    return [handlers[kind](payload, block, localState, update)];
+  if (db && db[block.id]) {
+    block.db = db[block.id];
   }
 
-  return [h('div', {}, data )];
+  block.update = function(value : any) : void {
+    dispatch( new PatchDoenetDatabaseMessage( pathname, block.id, value ) );
+  };
+    
+  if (kind in handlers) {
+    return handlers[kind](payload, block, options, children);
+  }
+
+  return h('div', {style: options.style}, data );
 }
 
 export function render(dvi, state : State, dispatch : Dispatcher) {
@@ -137,8 +167,8 @@ export function render(dvi, state : State, dispatch : Dispatcher) {
   blockStack = [rootBlock];
   
   let result = dvi2vdom(buffer, h,
-                        (data : string) => ximeraRuleHandler(data, state, dispatch),
-                        ximeraPushHandler,
+                        (data : string, options : any, children : VNode[]) => ximeraRuleHandler(data, options, children, state, dispatch),
+                        (data : string ) => ximeraPushHandler(data, state, dispatch),
                         ximeraPopHandler,
 	                (vdom : VNode) => {
                           blockStack[0].push(new XimeraPage(vdom));

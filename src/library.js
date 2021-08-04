@@ -584,11 +584,11 @@ export function rewrite(length, pointer) {
   
   if (filename == 'TTY:') {
     files.push({
- filename: 'stdout',
-                 stdout: true,
-                 position: 0,
-                 erstat: 0,                   
-               });
+      filename: 'stdout',
+      stdout: true,
+      position: 0,
+      erstat: 0,                   
+    });
     return files.length - 1;
   }
   

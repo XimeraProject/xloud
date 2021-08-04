@@ -1,4 +1,4 @@
-import texCorePath from '../tex/core.c3baf1282bc6.dump.gz';
+import texCorePath from '../tex/core.ad1d291d4fcf.dump.gz';
 import texBinaryPath from '../tex/out.2b1a55ec9654.wasm';
 import * as library from './library.js';
 
@@ -96,7 +96,8 @@ async function compile(callback) {
   postMessage({text: "Copied!\n"});
 
   library.setDirectory('');
-  library.setInput(' \\PassOptionsToClass{web}{ximera}\\input{texput}');
+  //library.setInput(' \\PassOptionsToClass{web}{ximera}\\input{texput}');
+  library.setInput(' \\input{texput}');
   
   library.setCallback(() => {
     const filename = 'texput.dvi';
