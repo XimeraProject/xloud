@@ -1,4 +1,4 @@
-import texCorePath from '../tex/core.ad1d291d4fcf.dump.gz';
+import texCorePath from '../tex/core.1ee3fa512add.dump.gz';
 import texBinaryPath from '../tex/out.2b1a55ec9654.wasm';
 import * as library from './library.js';
 

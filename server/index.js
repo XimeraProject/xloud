@@ -26,10 +26,6 @@ let optionsStatic = {
 // This is not hashed, but who cares if the favicon is immutable
 app.use('/favicon.ico', express.static(path.resolve(__dirname, '../public/favicon/favicon.ico'), optionsStatic ));
 
-// FIXME: how should this be cached?
-// Welp, doesn't matter, because I'm not using this anymore.
-// app.use('/local-texmf', express.static(path.resolve(__dirname, '../local-texmf')));
-
 app.get('/', function (request, response) {
   response.sendFile(path.resolve(__dirname, '../dist/index.html'));
 });

@@ -271,8 +271,8 @@ function openSync(filename, mode) {
     
     findMatch(filename).then((fullFilename) => {
 
-      if (filename == 'pgfsys-ximera.def') fullFilename = '/local-texmf/tex/latex/ximeraLatex/pgfsys-ximera.def';
-      if (filename == 'ximera.cls') fullFilename = '/local-texmf/tex/latex/ximeraLatex/ximera.cls?' + Date.now();
+      //if (filename == 'pgfsys-ximera.def') fullFilename = '/local-texmf/tex/latex/ximeraLatex/pgfsys-ximera.def';
+      //if (filename == 'ximera.cls') fullFilename = '/local-texmf/tex/latex/ximeraLatex/ximera.cls?' + Date.now();
 
       console.log('looking up', filename,'as',fullFilename);
       

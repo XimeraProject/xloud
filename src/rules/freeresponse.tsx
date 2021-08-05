@@ -13,5 +13,5 @@ export default function(data : string, block : any, options : any, children : VN
                     v: ev.target.value } );
   };
   
-  return <textarea on={{change}} style={{...options.style}} class={{'form-control': true}} attrs={{rows:'3'}}>{ value }</textarea>;
+  return <textarea on={{change}} style={{...options.style, resize: 'none'}} class={{'form-control': true}} attrs={{rows:'3'}}>{ value }</textarea>;
 }

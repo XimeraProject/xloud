@@ -116,19 +116,7 @@ function ximeraPopHandler() {
   blockStack.shift();
 }
 
-import youtube from './rules/youtube.tsx';
-import answer from './rules/answer.tsx';
-import freeresponse from './rules/freeresponse.tsx';
-import multiplechoice from './rules/multiplechoice.tsx';
-import checkwork from './rules/checkwork.tsx';
-
-let handlers = {
-  youtube,
-  answer,
-  multiplechoice,
-  freeresponse,
-  checkwork,
-};
+import handlers from './rules/index.ts';
 
 function ximeraRuleHandler( data : string, options : any, children : VNode[], state : State, dispatch : Dispatcher ) : VNode {
   let kind = data.split(' ')[0];
