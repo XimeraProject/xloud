@@ -32,7 +32,15 @@ export default function(data : string, block : any, options : any, _children : V
   const input = function(ev) {
     block.update( { ...block.db,
                     v : ev.target.value } );
-  };    
+  };
+
+  // Trigger button click on enter
+  const keyup = function(ev) {
+    if (ev.keyCode === 13) {
+      ev.preventDefault();
+      click(ev);
+    }
+  };
 
   block.needsResponse = true;
   
@@ -52,7 +60,7 @@ export default function(data : string, block : any, options : any, _children : V
     }
   }
 
-  let control = <input props={{value}} class={{'form-control': true}} attrs={{'disabled': classes['btn-success']===true}} on={{input}} style={{'padding': '2pt'}}/>;  
+  let control = <input props={{value}} class={{'form-control': true}} attrs={{'disabled': classes['btn-success']===true}} on={{input, keyup}} style={{'padding': '2pt'}}/>;  
   
   let button = <button on={{click}} class={{...classes, 'btn': true}} attrs={{type: 'button'}}>
       <Icon fa={label}/>
