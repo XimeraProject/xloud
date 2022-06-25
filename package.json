@@ -57,7 +57,7 @@
     "math-expressions": "^2.0.0-alpha26",
     "moment": "^2.29.1",
     "morgan": "^1.10.0",
-    "node-fetch": "^2.6.1",
+    "node-fetch": "^2.6.7",
     "npm-check-updates": "^11.8.2",
     "pako": "^2.0.3",
     "path-browserify": "^1.0.1",
